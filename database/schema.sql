@@ -88,7 +88,7 @@ CREATE TABLE listing (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_listing_batch FOREIGN KEY (batch_id)
         REFERENCES textile_batch(batch_id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT chk_listing_quantity CHECK (listed_quantity > 0),
+    CONSTRAINT chk_listing_quantity CHECK (listed_quantity >= 0),
     INDEX idx_listing_batch_status (batch_id, status),
     INDEX idx_listing_created_at (created_at)
 ) ENGINE=InnoDB;
@@ -206,4 +206,3 @@ CREATE TABLE stock_transaction (
     INDEX idx_stock_order (order_id),
     INDEX idx_stock_type (transaction_type)
 ) ENGINE=InnoDB;
-

@@ -16,9 +16,8 @@ $pageTitle = 'Supplier dashboard';
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container">
-    <div class="page-head"><div><div class="eyebrow">Supplier workspace</div><h1>Assalamu alaikum, <?= e(currentUser()['name']) ?></h1><p>Your identity and counts below are loaded from the database.</p></div><span class="badge-soft">Supplier</span></div>
+    <div class="page-head"><div><div class="eyebrow">Supplier workspace</div><h1>Assalamu alaikum, <?= e(currentUser()['name']) ?></h1><p>Monitor your textile inventory and marketplace activity.</p></div><span class="badge-soft">Supplier</span></div>
     <div class="stats-grid"><?php foreach ($stats as $label => $value): ?><div class="stat-card"><span><?= e($label) ?></span><strong><?= e($value) ?></strong></div><?php endforeach; ?></div>
-    <section class="panel"><h2 class="h4">Milestone status</h2><p class="mb-0">Authentication and schema are active. Batch/listing workflow screens belong to the next project phase.</p></section>
+    <section class="panel"><h2 class="h4">Inventory workspace</h2><p>Record new stock, publish it to a sales channel, and respond to wholesale offers.</p><div class="action-row"><a class="btn btn-primary" href="<?=e(url('supplier/batches.php'))?>">Manage batches</a><a class="btn btn-outline-primary" href="<?=e(url('supplier/listings.php'))?>">Manage listings</a><a class="btn btn-outline-primary" href="<?=e(url('supplier/quotations.php'))?>">Buyer quotations</a></div></section>
 </main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
-

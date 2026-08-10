@@ -16,10 +16,21 @@ $flashes = getFlashes();
 <body>
 <nav class="topbar">
     <div class="container nav-inner">
-        <a class="brand" href="<?= e(url()) ?>"><span>JL</span> JhutLedger BD</a>
+        <a class="brand" href="<?= e(url()) ?>"><span class="brand-mark">JL</span><span class="brand-name">JhutLedger<small>Bangladesh</small></span></a>
         <div class="nav-links">
             <?php if (isLoggedIn()): ?>
                 <a href="<?= e(url(dashboardPath())) ?>">Dashboard</a>
+                <?php if (currentUser()['role'] === 'supplier'): ?>
+                    <a href="<?= e(url('supplier/batches.php')) ?>">Batches</a>
+                    <a href="<?= e(url('supplier/listings.php')) ?>">Listings</a>
+                    <a href="<?= e(url('supplier/quotations.php')) ?>">Quotations</a>
+                <?php elseif (currentUser()['role'] === 'b2b'): ?>
+                    <a href="<?= e(url('marketplace.php')) ?>">Marketplace</a>
+                    <a href="<?= e(url('b2b/quotations.php')) ?>">Quotations</a>
+                <?php elseif (currentUser()['role'] === 'b2c'): ?>
+                    <a href="<?= e(url('marketplace.php')) ?>">Marketplace</a>
+                    <a href="<?= e(url('b2c/orders.php')) ?>">Orders</a>
+                <?php endif; ?>
                 <a href="<?= e(url('profile.php')) ?>">Profile</a>
                 <?php if (currentUser()['role'] === 'admin'): ?>
                     <a href="<?= e(url('admin/users.php')) ?>">Users</a>
@@ -43,4 +54,3 @@ $flashes = getFlashes();
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
-

@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $baseRole = getUserRole(db(), (int) $user['user_id']);
             loginUser($user, $baseRole);
-            setFlash('success', 'Login succeeded. Your account and role were verified from jhutledger_db.');
+            setFlash('success', 'Welcome back, ' . $user['name'] . '.');
             redirect(dashboardPath());
         }
     } catch (Throwable) {
@@ -36,9 +36,9 @@ require __DIR__ . '/includes/header.php';
 ?>
 <main class="container narrow auth-shell">
     <div class="panel">
-        <div class="eyebrow">Database authentication</div>
+        <div class="eyebrow">Account access</div>
         <h1 class="h2 mt-2">Welcome back</h1>
-        <p class="muted">Passwords are verified securely; roles are resolved from specialization tables.</p>
+        <p class="muted">Sign in to continue to your dashboard.</p>
         <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= e($error) ?></div><?php endif; ?>
         <form method="post">
             <?= csrfField() ?>
@@ -46,7 +46,6 @@ require __DIR__ . '/includes/header.php';
             <div class="mb-3"><label class="form-label" for="password">Password</label><input class="form-control" type="password" id="password" name="password" required autocomplete="current-password"></div>
             <button class="btn btn-primary w-100" type="submit">Log in</button>
         </form>
-        <div class="mt-4 p-3 bg-light rounded"><strong>Demo password:</strong> <code>Demo@123</code><br><span class="small muted">Use supplier@, b2b@, b2c@, or admin@jhutledger.local.</span></div>
     </div>
 </main>
 <?php require __DIR__ . '/includes/footer.php'; ?>

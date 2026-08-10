@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO {$subtypeTable} (user_id) VALUES (?)")->execute([$userId]);
             $pdo->commit();
 
-            setFlash('success', "Signup complete. Database user #{$userId} and its " . formatRole($values['role']) . ' specialization were committed together.');
+            setFlash('success', 'Your account has been created. You can now log in.');
             redirect('login.php');
         } catch (PDOException $exception) {
             if (isset($pdo) && $pdo->inTransaction()) {
@@ -82,9 +82,9 @@ require __DIR__ . '/includes/header.php';
 ?>
 <main class="container narrow auth-shell">
     <div class="panel">
-        <div class="eyebrow">Transactional signup</div>
+        <div class="eyebrow">Join JhutLedger</div>
         <h1 class="h2 mt-2">Create your account</h1>
-        <p class="muted">Your base user and selected role are saved together—or neither is saved.</p>
+        <p class="muted">Choose the account type that matches how you use the marketplace.</p>
         <?php if ($errors): ?>
             <div class="alert alert-danger" role="alert"><strong>Please correct the following:</strong><ul class="mb-0 mt-2"><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div>
         <?php endif; ?>
@@ -101,7 +101,7 @@ require __DIR__ . '/includes/header.php';
                 <div><label class="form-label" for="postal_code">Postal code</label><input class="form-control" id="postal_code" name="postal_code" maxlength="20" required value="<?= e($values['postal_code']) ?>"></div>
                 <div><label class="form-label" for="password">Password</label><input class="form-control" type="password" id="password" name="password" minlength="8" required></div>
                 <div><label class="form-label" for="password_confirmation">Confirm password</label><input class="form-control" type="password" id="password_confirmation" name="password_confirmation" minlength="8" required></div>
-                <div class="full"><button class="btn btn-primary w-100" type="submit">Create database-backed account</button></div>
+                <div class="full"><button class="btn btn-primary w-100" type="submit">Create account</button></div>
             </div>
         </form>
         <p class="text-center mt-3 mb-0">Already registered? <a href="<?= e(url('login.php')) ?>">Log in</a></p>

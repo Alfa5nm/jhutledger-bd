@@ -1,6 +1,6 @@
 # JhutLedger BD — Faculty Milestone
 
-A database-driven university project built with PHP 8.2, MariaDB/MySQL, PDO, HTML/CSS, and Bootstrap. This milestone implements the complete 13-table schema plus working signup, login, sessions, role authorization, profile editing, admin user status management, and a live database-health page.
+A database-driven university project built with PHP 8.2, MariaDB/MySQL, PDO, HTML/CSS, and Bootstrap. It implements the complete 13-table schema, authentication and role authorization, supplier inventory and listing management, buyer marketplace search, B2B quotations, B2C orders, transactional stock reservations, profile editing, admin controls, and database monitoring.
 
 ## Database diagrams
 
@@ -60,6 +60,13 @@ D:\Softwares\XAMPP\php\php.exe tests\database_smoke.php
 
 See [docs/VIVA_CHECKLIST.md](docs/VIVA_CHECKLIST.md) for the recommended faculty demonstration.
 
-## Current boundary
+## Marketplace workflow
 
-All marketplace entities and relationships are present in the database. Full batch/listing CRUD, quotations, order fulfilment, payments, stock reservations, and reports are intentionally deferred to the next phase.
+- Suppliers create and edit textile batches without deleting historical data.
+- Suppliers allocate available batch quantities to B2B or B2C listings.
+- Buyers search and filter active listings by material, district, and price.
+- B2B buyers submit offers; suppliers accept, counter, or reject them.
+- B2C buyers place bundle-sized orders directly.
+- Accepted quotations and direct orders create `orders` and `order_item` records, reduce both listing and batch availability, and add a `RESERVED` stock transaction inside one database transaction.
+
+Payment capture, shipment fulfilment, cancellations with stock release, and reporting remain future extensions.

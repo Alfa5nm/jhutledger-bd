@@ -83,3 +83,14 @@ function statusClass(string $status): string
         default => 'badge-warning',
     };
 }
+
+function money(float|string $amount): string
+{
+    return '৳' . number_format((float) $amount, 2);
+}
+
+function validDate(string $date): bool
+{
+    $parsed = DateTime::createFromFormat('Y-m-d', $date);
+    return $parsed !== false && $parsed->format('Y-m-d') === $date;
+}

@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update = $pdo->prepare('UPDATE users SET name = ?, phone = ?, street = ?, city = ?, district = ?, postal_code = ? WHERE user_id = ?');
         $update->execute([...array_values($updates), currentUser()['user_id']]);
         refreshSessionUser($pdo);
-        setFlash('success', 'Profile updated in the database.');
+        setFlash('success', 'Profile updated successfully.');
         redirect('profile.php');
     }
     $profile = array_merge($profile, $updates);
@@ -34,7 +34,7 @@ $pageTitle = 'Profile';
 require __DIR__ . '/includes/header.php';
 ?>
 <main class="container narrow">
-    <div class="page-head"><div><div class="eyebrow">Database update</div><h1 class="h2">My profile</h1></div><span class="<?= e(statusClass($profile['user_status'])) ?>"><?= e($profile['user_status']) ?></span></div>
+    <div class="page-head"><div><div class="eyebrow">Account settings</div><h1 class="h2">My profile</h1></div><span class="<?= e(statusClass($profile['user_status'])) ?>"><?= e($profile['user_status']) ?></span></div>
     <div class="panel mt-0">
         <?php if ($errors): ?><div class="alert alert-danger"><ul class="mb-0"><?php foreach ($errors as $error): ?><li><?= e($error) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
         <form method="post">
@@ -53,4 +53,3 @@ require __DIR__ . '/includes/header.php';
     </div>
 </main>
 <?php require __DIR__ . '/includes/footer.php'; ?>
-

@@ -1,6 +1,6 @@
 # JhutLedger BD viva checklist
 
-## Two-minute demonstration
+## Core milestone demonstration
 
 1. Open `http://localhost/jhutledger/` and choose **Create an account**.
 2. Register a new Supplier, B2B Buyer, or B2C Buyer.
@@ -12,6 +12,15 @@
 8. Open **DB Status** to show the PDO connection, MariaDB version, all 13 tables, and subtype counts.
 9. Open **Users**, search for the new account, deactivate it, and show that it can no longer log in.
 
+## Marketplace demonstration
+
+1. Log in as the Supplier and create a textile batch.
+2. Create a B2B or B2C listing without exceeding the batch's available quantity.
+3. Log in as the matching buyer and filter the Marketplace.
+4. For B2B, submit a quotation, counter it as Supplier, then accept it as Buyer. For B2C, place a bundle-sized direct order.
+5. Show the confirmed order, reduced listing quantity, reduced batch availability, and new `RESERVED` stock transaction.
+6. Explain that the order operation uses one transaction plus `SELECT ... FOR UPDATE` to prevent partial writes and overselling.
+
 ## Database points to explain
 
 - `users` is the supertype; `supplier`, `b2b_buyer`, and `b2c_buyer` are total/disjoint subtypes enforced by the registration transaction.
@@ -21,4 +30,3 @@
 - Historical records use restrictive foreign keys and status changes rather than destructive deletion.
 - Money and quantities use `DECIMAL`, not floating-point values.
 - Every user-input query uses PDO prepared statements; forms use CSRF tokens and escaped output.
-

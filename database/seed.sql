@@ -22,8 +22,8 @@ VALUES
     (2, 2, 'Denim', '98% Cotton, 2% Elastane', 'Indigo', 320.00, 'New', 500.00, 500.00, 130.00, 'Warehouse B-04', CURDATE() - INTERVAL 10 DAY, 'kg', 'Active');
 
 INSERT INTO listing (listing_id, batch_id, listed_quantity, status, created_at) VALUES
-    (1, 1, 500.00, 'Active', NOW() - INTERVAL 40 DAY),
-    (2, 1, 200.00, 'Active', NOW() - INTERVAL 35 DAY),
+    (1, 1, 300.00, 'Active', NOW() - INTERVAL 40 DAY),
+    (2, 1, 180.00, 'Active', NOW() - INTERVAL 35 DAY),
     (3, 2, 300.00, 'Active', NOW() - INTERVAL 8 DAY);
 
 INSERT INTO b2b_listing (listing_id, minimum_quantity, bulk_unit_price) VALUES
@@ -65,4 +65,3 @@ VALUES
     (4, 1, 2, 20.00, 'RESERVED', NOW() - INTERVAL 1 DAY, 'Reserved for B2C order #2');
 
 COMMIT;
-

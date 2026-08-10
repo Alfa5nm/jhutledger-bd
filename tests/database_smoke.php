@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../includes/marketplace.php';
 
 $expected = ['users','supplier','b2b_buyer','b2c_buyer','textile_batch','listing','b2b_listing','b2c_listing','quotation','orders','order_item','payment','stock_transaction'];
 $pdo = db();
@@ -43,7 +44,36 @@ try {
 }
 if (!$fkBlocked) throw new RuntimeException('Foreign key rejection test failed.');
 
-echo "PASS: {$database} has 13 expected tables.\n";
-echo 'PASS: ' . count($users) . " seeded users each have exactly one subtype.\n";
-echo "PASS: password_verify, transaction rollback, and foreign key rejection work.\n";
+$overAllocated = $pdo->query(
+    "SELECT b.batch_id FROM textile_batch b
+     JOIN listing l ON l.batch_id=b.batch_id AND l.status='Active'
+     GROUP BY b.batch_id,b.available_quantity
+     HAVING SUM(l.listed_quantity)>b.available_quantity"
+)->fetchColumn();
+if ($overAllocated) throw new RuntimeException("Active listings over-allocate batch #{$overAllocated}.");
 
+$beforeStock = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
+$pdo->beginTransaction();
+$testOrderId = createReservedOrder($pdo, 4, 3, 5.00, 260.00, 'B2C');
+$duringStock = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
+if (abs($duringStock - ($beforeStock - 5.00)) > 0.0001) throw new RuntimeException('Order did not reserve batch stock.');
+$listingAfterReservation = $pdo->query('SELECT listed_quantity,status FROM listing WHERE listing_id=3')->fetch();
+if ((float)$listingAfterReservation['listed_quantity'] !== 295.0 || $listingAfterReservation['status'] !== 'Active') {
+    throw new RuntimeException('Listing quantity/status update failed.');
+}
+$pdo->rollBack();
+$afterStock = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
+$statement = $pdo->prepare('SELECT COUNT(*) FROM orders WHERE order_id=?');$statement->execute([$testOrderId]);
+if (abs($afterStock - $beforeStock) > 0.0001 || (int)$statement->fetchColumn() !== 0) {
+    throw new RuntimeException('Marketplace transaction rollback failed.');
+}
+$pdo->beginTransaction();
+createReservedOrder($pdo, 4, 3, 300.00, 260.00, 'B2C');
+$soldOutStatus = $pdo->query('SELECT status FROM listing WHERE listing_id=3')->fetchColumn();
+if ($soldOutStatus !== 'Sold Out') throw new RuntimeException('Sold-out listing status update failed.');
+$pdo->rollBack();
+
+echo "PASS: {$database} has 13 expected tables.\n";
+echo 'PASS: ' . count($users) . " database users each have exactly one subtype.\n";
+echo "PASS: password_verify, transaction rollback, and foreign key rejection work.\n";
+echo "PASS: listing allocation and transactional stock reservation work.\n";
