@@ -1,0 +1,20 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Runtime output
+*.log
+*.tmp
+vendor/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local Codex/Wigolo instructions and unrelated reference diagrams
+AGENTS.md
+Campus_Club_Event_Hub*.svg
+
