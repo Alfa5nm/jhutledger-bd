@@ -24,8 +24,8 @@ $flashes = getFlashes();
             <?php if (isLoggedIn()): ?>
                 <div class="nav-group"><span class="nav-group-label"><?= e(formatRole(currentUser()['role'])) ?></span><a href="<?= e(url(dashboardPath())) ?>">Dashboard</a></div>
                 <?php if (currentUser()['role'] === 'supplier'): ?>
-                    <div class="nav-group"><span class="nav-group-label">Inventory</span><a href="<?= e(url('supplier/batches.php')) ?>">Batches</a><a href="<?= e(url('supplier/listings.php')) ?>">Listings</a><a href="<?= e(url('supplier/stock-ledger.php')) ?>">Stock ledger</a></div>
-                    <div class="nav-group"><span class="nav-group-label">Sales</span><a href="<?= e(url('supplier/quotations.php')) ?>">Quotations</a><a href="<?= e(url('supplier/orders.php')) ?>">Orders</a><a href="<?= e(url('supplier/reports.php')) ?>">Reports</a></div>
+                    <div class="nav-group"><span class="nav-group-label">Inventory</span><a href="<?= e(url('supplier/batches.php')) ?>">Batches</a><a href="<?= e(url('supplier/listings.php')) ?>">Listings</a><a href="<?= e(url('supplier/stock-ledger.php')) ?>">Stock ledger</a><a href="<?= e(url('supplier/pricing-assistant.php')) ?>">Pricing assistant</a></div>
+                    <div class="nav-group"><span class="nav-group-label">Sales</span><a href="<?= e(url('supplier/quotations.php')) ?>">Quotations</a><a href="<?= e(url('supplier/orders.php')) ?>">Orders</a><a href="<?= e(url('supplier/reports.php')) ?>">Reports</a><a href="<?= e(url('supplier/sustainability.php')) ?>">Recirculation</a></div>
                 <?php elseif (currentUser()['role'] === 'b2b'): ?>
                     <div class="nav-group"><span class="nav-group-label">Sourcing</span><a href="<?= e(url('marketplace.php')) ?>">Marketplace</a><a href="<?= e(url('b2b/quotations.php')) ?>">Quotations</a><a href="<?= e(url('b2b/orders.php')) ?>">Orders</a></div>
                 <?php elseif (currentUser()['role'] === 'b2c'): ?>
@@ -33,7 +33,7 @@ $flashes = getFlashes();
                 <?php endif; ?>
                 <?php if (currentUser()['role'] === 'admin'): ?>
                     <div class="nav-group"><span class="nav-group-label">Operations</span><a href="<?= e(url('admin/exceptions.php')) ?>">Exceptions</a><a href="<?= e(url('admin/users.php')) ?>">Users</a><a href="<?= e(url('admin/payments.php')) ?>">Payments</a></div>
-                    <div class="nav-group"><span class="nav-group-label">Insight</span><a href="<?= e(url('admin/reports.php')) ?>">Reports</a><a href="<?= e(url('admin/database-status.php')) ?>">DB status</a></div>
+                    <div class="nav-group"><span class="nav-group-label">Insight</span><a href="<?= e(url('admin/reports.php')) ?>">Reports</a><a href="<?= e(url('admin/sustainability.php')) ?>">Recirculation</a><a href="<?= e(url('admin/database-status.php')) ?>">DB status</a></div>
                 <?php endif; ?>
                 <div class="nav-group nav-account"><span class="nav-group-label">Account</span><a href="<?= e(url('profile.php')) ?>">Profile</a><form method="post" action="<?= e(url('logout.php')) ?>" class="inline-form">
                     <?= csrfField() ?>

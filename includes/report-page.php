@@ -17,13 +17,13 @@ if (($_GET['export'] ?? '') === 'csv') {
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     $output = fopen('php://output', 'wb');
     fwrite($output, "\xEF\xBB\xBF");
-    fputcsv($output, ['Order ID', 'Date', 'Type', 'Buyer', 'Material', 'Quantity', 'Unit price', 'Revenue', 'Gross profit', 'Payment']);
+    fputcsv($output, ['Order ID', 'Date', 'Type', 'Buyer', 'Material', 'Quantity', 'Unit price', 'Gross revenue', 'Gross profit', 'Returned', 'Net revenue', 'Net profit', 'Payment']);
     foreach ($report['orders'] as $row) {
         $safeBuyer = preg_match('/^[=+\-@]/', $row['buyer_name']) ? "'" . $row['buyer_name'] : $row['buyer_name'];
         $safeMaterial = preg_match('/^[=+\-@]/', $row['material_type']) ? "'" . $row['material_type'] : $row['material_type'];
         fputcsv($output, [
             $row['order_id'], $row['order_date'], $row['order_type'], $safeBuyer, $safeMaterial,
-            $row['quantity'], $row['selling_price'], $row['revenue'], $row['gross_profit'], $row['payment_status'],
+            $row['quantity'], $row['selling_price'], $row['revenue'], $row['gross_profit'], $row['has_return'] ? 'Yes' : 'No', $row['net_revenue'], $row['net_profit'], $row['payment_status'],
         ]);
     }
     fclose($output);
@@ -54,6 +54,9 @@ require __DIR__ . '/header.php';
         <div class="stat-card"><span>Quantity sold</span><strong><?= e(number_format((float) $report['summary']['quantity_sold'], 2)) ?></strong></div>
         <div class="stat-card"><span>Revenue</span><strong><?= e(money($report['summary']['revenue'])) ?></strong></div>
         <div class="stat-card"><span>Gross profit</span><strong><?= e(money($report['summary']['gross_profit'])) ?></strong></div>
+        <div class="stat-card"><span>Returned revenue</span><strong><?= e(money($report['summary']['returned_revenue'])) ?></strong></div>
+        <div class="stat-card"><span>Net revenue</span><strong><?= e(money($report['summary']['net_revenue'])) ?></strong></div>
+        <div class="stat-card"><span>Net profit</span><strong><?= e(money($report['summary']['net_profit'])) ?></strong></div>
     </div>
 
     <section class="panel">

@@ -24,10 +24,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'cancel') {
     redirect(strtolower($orderType) . '/orders.php');
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'repeat') {
+    verifyCsrf();
+    $orderId = filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
+    try {
+        if (!$orderId) { throw new RuntimeException('Select a valid order.'); }
+        $result = repeatPurchase($pdo, $orderId, $buyerId, $buyerRole);
+        if ($result['type'] === 'order') {
+            setFlash('success', "Buy again created order #{$result['id']} using the current retail price.");
+            redirect('order.php?id=' . $result['id']);
+        }
+        setFlash('success', "Repeat purchase created quotation #{$result['id']} using current wholesale terms.");
+        redirect('b2b/quotations.php');
+    } catch (Throwable $exception) {
+        setFlash('danger', $exception->getMessage());
+        redirect(strtolower($orderType) . '/orders.php');
+    }
+}
+
 $statement = $pdo->prepare(
     "SELECT o.*, oi.quantity, oi.selling_price, l.listing_id,
             b.material_type, b.color, b.unit_of_measure, supplier.name AS supplier_name,
-            p.payment_id, p.payment_method, p.payment_status
+            p.payment_id, p.payment_method, p.payment_status,
+            EXISTS(SELECT 1 FROM stock_transaction returned WHERE returned.order_id=o.order_id AND returned.transaction_type='RETURNED') has_return
      FROM orders o
      JOIN order_item oi ON oi.order_id = o.order_id AND oi.line_no = 1
      JOIN listing l ON l.listing_id = oi.listing_id
@@ -65,7 +84,7 @@ require __DIR__ . '/header.php';
                         <td data-label="Supplier"><?= e($order['supplier_name']) ?></td>
                         <td data-label="Quantity"><?= e($order['quantity']) ?> <?= e($order['unit_of_measure']) ?></td>
                         <td data-label="Total"><?= e(money($order['total_amount'])) ?></td>
-                        <td data-label="Order status"><span class="<?= e(statusClass($order['order_status'])) ?>"><?= e($order['order_status']) ?></span></td>
+                        <td data-label="Order status"><span class="<?= e(statusClass(displayOrderStatus($order))) ?>"><?= e(displayOrderStatus($order)) ?></span></td>
                         <td data-label="Payment">
                             <?php if ($order['payment_status']): ?>
                                 <span class="<?= e(statusClass($order['payment_status'])) ?>"><?= e($order['payment_status']) ?></span><br>
@@ -88,6 +107,12 @@ require __DIR__ . '/header.php';
                                         <input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>">
                                         <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
                                     </form>
+                                <?php endif; ?>
+                                <?php if (in_array($order['order_status'], ['Completed', 'Cancelled'], true)): ?>
+                                    <form method="post"><?= csrfField() ?><input type="hidden" name="action" value="repeat"><input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>"><button class="btn btn-sm btn-outline-primary" type="submit">Buy again</button></form>
+                                <?php endif; ?>
+                                <?php if ($order['order_status'] === 'Completed' && !$order['has_return']): ?>
+                                    <a class="btn btn-sm btn-outline-danger" href="<?= e(url('return.php?order_id=' . $order['order_id'])) ?>">Return</a>
                                 <?php endif; ?>
                             </div>
                         </td>

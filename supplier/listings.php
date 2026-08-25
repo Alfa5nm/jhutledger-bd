@@ -56,6 +56,16 @@ $listingSql="SELECT l.*,b.material_type,b.color,b.unit_of_measure,IF(bl.listing_
 if($batchFilter){$listingSql.=' AND l.batch_id=?';$listingParams[]=$batchFilter;}if($channelFilter==='B2B')$listingSql.=' AND bl.listing_id IS NOT NULL';elseif($channelFilter==='B2C')$listingSql.=' AND bc.listing_id IS NOT NULL';$listingSql.=' ORDER BY l.created_at DESC';
 $s=$pdo->prepare($listingSql);$s->execute($listingParams);$listings=$s->fetchAll();
 $form=$edit?:['listing_id'=>'','batch_id'=>'','listing_type'=>'B2B','listed_quantity'=>'','status'=>'Active','minimum_quantity'=>'','bulk_unit_price'=>'','bundle_size'=>'','fixed_unit_price'=>''];
+if(!$edit&&($_GET['prefill']??'')==='1'){
+    $prefillBatch=filter_input(INPUT_GET,'batch_id',FILTER_VALIDATE_INT);$prefillType=in_array(($_GET['listing_type']??''),['B2B','B2C'],true)?$_GET['listing_type']:'';
+    $owned=false;foreach($batches as $candidate){if((int)$candidate['batch_id']===$prefillBatch){$owned=true;break;}}
+    if($owned&&$prefillType){
+        $form['batch_id']=$prefillBatch;$form['listing_type']=$prefillType;$form['listed_quantity']=max(0,(float)($_GET['listed_quantity']??0));
+        if($prefillType==='B2B'){$form['minimum_quantity']=max(0,(float)($_GET['minimum_quantity']??0));$form['bulk_unit_price']=max(0,(float)($_GET['bulk_unit_price']??0));}
+        else{$form['bundle_size']=max(0,(float)($_GET['bundle_size']??0));$form['fixed_unit_price']=max(0,(float)($_GET['fixed_unit_price']??0));}
+        setFlash('info','Pricing suggestion loaded. Review it before publishing; no listing has been created yet.');
+    }
+}
 $pageTitle='Marketplace listings';require __DIR__.'/../includes/header.php';
 ?>
 <main class="container"><div class="page-head"><div><div class="eyebrow">Sales channels</div><h1>Marketplace listings</h1><p>Allocate batch stock to wholesale or retail buyers.</p></div><a class="btn btn-outline-primary" href="<?=e(url('supplier/batches.php'))?>">Manage batches</a></div>

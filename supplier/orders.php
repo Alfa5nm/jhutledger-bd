@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $statement = $pdo->prepare(
     "SELECT o.*, oi.quantity, b.material_type, b.color, b.unit_of_measure,
             buyer.name AS buyer_name, buyer.email AS buyer_email,
-            p.payment_method, p.payment_status
+            p.payment_method, p.payment_status,
+            EXISTS(SELECT 1 FROM stock_transaction returned WHERE returned.order_id=o.order_id AND returned.transaction_type='RETURNED') has_return
      FROM orders o
      JOIN order_item oi ON oi.order_id = o.order_id AND oi.line_no = 1
      JOIN listing l ON l.listing_id = oi.listing_id
@@ -65,7 +66,7 @@ require __DIR__ . '/../includes/header.php';
                     <td data-label="Quantity"><?= e($order['quantity']) ?> <?= e($order['unit_of_measure']) ?></td>
                     <td data-label="Total"><?= e(money($order['total_amount'])) ?></td>
                     <td data-label="Payment"><span class="<?= e(statusClass($order['payment_status'] ?? 'Not submitted')) ?>"><?= e($order['payment_status'] ?? 'Not submitted') ?></span><?php if ($order['payment_method']): ?><br><small class="muted"><?= e($order['payment_method']) ?></small><?php endif; ?></td>
-                    <td data-label="Status"><span class="<?= e(statusClass($order['order_status'])) ?>"><?= e($order['order_status']) ?></span></td>
+                    <td data-label="Status"><span class="<?= e(statusClass(displayOrderStatus($order))) ?>"><?= e(displayOrderStatus($order)) ?></span></td>
                     <td data-label="Actions"><div class="action-row">
                         <a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$order['order_id']))?>">Details</a><a class="btn btn-sm btn-outline-primary" href="<?=e(url('invoice.php?id='.$order['order_id']))?>">Invoice</a>
                         <?php if ($order['order_status'] === 'Confirmed'): ?>
@@ -76,6 +77,7 @@ require __DIR__ . '/../includes/header.php';
                         <?php if (in_array($order['order_status'], ['Pending', 'Confirmed'], true)): ?>
                             <form method="post" onsubmit="return confirm('Cancel this order and restore the reserved stock?')"><?= csrfField() ?><input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>"><button class="btn btn-sm btn-outline-danger" name="action" value="cancel">Cancel</button></form>
                         <?php endif; ?>
+                        <?php if ($order['order_status'] === 'Completed' && !$order['has_return']): ?><a class="btn btn-sm btn-outline-danger" href="<?= e(url('return.php?order_id=' . $order['order_id'])) ?>">Process return</a><?php endif; ?>
                     </div></td>
                 </tr>
             <?php endforeach; ?>

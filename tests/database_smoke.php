@@ -143,6 +143,23 @@ try {
     $lateCancellationBlocked = true;
 }
 if (!$lateCancellationBlocked) throw new RuntimeException('Completed order cancellation was not blocked.');
+$returnBatchBefore = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
+$returnListingBefore = (float) $pdo->query('SELECT listed_quantity FROM listing WHERE listing_id=3')->fetchColumn();
+returnOrder($pdo, $workflowOrderId, 'b2c', 4);
+$returnedCount = (int) $pdo->query("SELECT COUNT(*) FROM stock_transaction WHERE order_id={$workflowOrderId} AND transaction_type='RETURNED'")->fetchColumn();
+$returnedPayment = $pdo->query("SELECT payment_status FROM payment WHERE order_id={$workflowOrderId}")->fetchColumn();
+$returnBatchAfter = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
+$returnListingAfter = (float) $pdo->query('SELECT listed_quantity FROM listing WHERE listing_id=3')->fetchColumn();
+if ($returnedCount !== 1 || $returnedPayment !== 'Refunded'
+    || abs($returnBatchAfter - ($returnBatchBefore + 5)) > 0.0001
+    || abs($returnListingAfter - ($returnListingBefore + 5)) > 0.0001) {
+    throw new RuntimeException('Return did not restore stock and refund the paid payment.');
+}
+$duplicateReturnBlocked = false;
+try { returnOrder($pdo, $workflowOrderId, 'b2c', 4); } catch (RuntimeException) { $duplicateReturnBlocked = true; }
+if (!$duplicateReturnBlocked) throw new RuntimeException('Duplicate full-order return was not blocked.');
+$reordered = repeatPurchase($pdo, $workflowOrderId, 4, 'b2c');
+if ($reordered['type'] !== 'order' || $reordered['id'] <= 0) throw new RuntimeException('B2C repeat purchase failed.');
 $pdo->rollBack();
 
 $batchBeforeCancel = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
@@ -177,6 +194,20 @@ if (abs((float) $adminReport['summary']['revenue'] - $directRevenue) > 0.0001
     throw new RuntimeException('Sales report totals or supplier scoping failed.');
 }
 
+$projection = pricingProjection(100, 10, 20);
+if (abs($projection['suggested_price'] - 125) > 0.0001 || abs($projection['projected_profit'] - 250) > 0.0001) {
+    throw new RuntimeException('Margin-on-selling-price calculation failed.');
+}
+$invalidMarginBlocked = false;
+try { pricingProjection(100, 10, 100); } catch (RuntimeException) { $invalidMarginBlocked = true; }
+if (!$invalidMarginBlocked) throw new RuntimeException('Invalid pricing margin was not blocked.');
+$sustainabilityFilters = ['date_from'=>'','date_to'=>'','channel'=>'','condition'=>'','material'=>'','unit'=>''];
+$adminSustainability = sustainabilityReport($pdo, null, $sustainabilityFilters);
+$supplierSustainability = sustainabilityReport($pdo, 2, $sustainabilityFilters);
+$adminRecovered = array_sum(array_map(fn($row)=>(float)$row['recovered_value'], $adminSustainability['units']));
+$supplierRecovered = array_sum(array_map(fn($row)=>(float)$row['recovered_value'], $supplierSustainability['units']));
+if ($supplierRecovered > $adminRecovered + 0.0001) throw new RuntimeException('Sustainability supplier scoping failed.');
+
 $pdo->beginTransaction();
 $scopeEmail = 'report-scope-' . bin2hex(random_bytes(4)) . '@example.test';
 $insert->execute(['Report Scope Supplier', $scopeEmail, '01700000001', password_hash('TestPass123', PASSWORD_DEFAULT), 'Scope Street', 'Dhaka', 'Dhaka', '1200']);
@@ -208,3 +239,4 @@ echo "PASS: password_verify, transaction rollback, and foreign key rejection wor
 echo "PASS: listing allocation and transactional stock reservation work.\n";
 echo "PASS: payment review, order transitions, cancellation restoration, and reports work.\n";
 echo "PASS: order detail, stock movement, and admin exception derivation work.\n";
+echo "PASS: returns, repeat purchase, pricing projections, and sustainability scoping work.\n";

@@ -2,6 +2,8 @@
 
 A database-driven university project built with PHP 8.2, MariaDB/MySQL, PDO, HTML/CSS, and Bootstrap. It implements the complete 13-table schema, authentication and role authorization, supplier inventory and listing management, buyer marketplace search, B2B quotations, B2C orders, fulfilment, simulated payments, transactional cancellation, stock-ledger tracing, order timelines, printable invoices, sales reporting, admin exception monitoring, profile editing, and database health checks.
 
+The 25 August expansion adds four modules without changing the schema: full-order returns with automatic mock-payment refunds, B2C reorder/B2B repeat quotation, a supplier pricing and margin assistant, and unit-safe textile-recirculation analytics with CSV export.
+
 ## Database diagrams
 
 - [Relational schema diagram](docs/schema-diagram.png)

@@ -1,5 +1,14 @@
 # JhutLedger BD viva checklist
 
+## Four additional features
+
+1. **Return and automatic refund:** complete an order, process its full return, and show restored stock, one `RETURNED` ledger row, derived Returned status, and Paid → Refunded.
+2. **Repeat purchase:** B2C Buy again creates a fresh order at current retail terms; B2B Buy again creates a new Pending quotation with current wholesale terms and a seven-day expiry.
+3. **Pricing and margin assistant:** select a supplier-owned batch, calculate `cost / (1 - target margin)`, and prefill the listing form without silently publishing or storing the simulation.
+4. **Textile recirculation analytics:** filter by date, channel, condition, material, and unit; keep kg, metre, and piece totals separate; export the exact visible result as CSV.
+
+The approved schema remains exactly 13 tables. Returned state comes from `stock_transaction`, repeat B2B purchases reuse `quotation`, and pricing simulations are intentionally not persisted.
+
 ## 25 August four-feature preparation
 
 1. Run `D:\Softwares\XAMPP\php\php.exe scripts\prepare_faculty_demo.php` and note the three printed IDs.
