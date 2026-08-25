@@ -11,35 +11,34 @@ $flashes = getFlashes();
     <title><?= e($pageTitle) ?> | <?= e(appConfig('name')) ?></title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= e(url('assets/css/app.css')) ?>" rel="stylesheet">
+    <link href="<?= e(url('assets/css/app.css?v=' . filemtime(__DIR__ . '/../assets/css/app.css'))) ?>" rel="stylesheet">
 </head>
 <body>
 <nav class="topbar">
     <div class="container nav-inner">
         <a class="brand" href="<?= e(url()) ?>"><span class="brand-mark">JL</span><span class="brand-name">JhutLedger<small>Bangladesh</small></span></a>
-        <div class="nav-links">
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open navigation">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav-links" id="primary-navigation">
             <?php if (isLoggedIn()): ?>
-                <a href="<?= e(url(dashboardPath())) ?>">Dashboard</a>
+                <div class="nav-group"><span class="nav-group-label"><?= e(formatRole(currentUser()['role'])) ?></span><a href="<?= e(url(dashboardPath())) ?>">Dashboard</a></div>
                 <?php if (currentUser()['role'] === 'supplier'): ?>
-                    <a href="<?= e(url('supplier/batches.php')) ?>">Batches</a>
-                    <a href="<?= e(url('supplier/listings.php')) ?>">Listings</a>
-                    <a href="<?= e(url('supplier/quotations.php')) ?>">Quotations</a>
+                    <div class="nav-group"><span class="nav-group-label">Inventory</span><a href="<?= e(url('supplier/batches.php')) ?>">Batches</a><a href="<?= e(url('supplier/listings.php')) ?>">Listings</a><a href="<?= e(url('supplier/stock-ledger.php')) ?>">Stock ledger</a></div>
+                    <div class="nav-group"><span class="nav-group-label">Sales</span><a href="<?= e(url('supplier/quotations.php')) ?>">Quotations</a><a href="<?= e(url('supplier/orders.php')) ?>">Orders</a><a href="<?= e(url('supplier/reports.php')) ?>">Reports</a></div>
                 <?php elseif (currentUser()['role'] === 'b2b'): ?>
-                    <a href="<?= e(url('marketplace.php')) ?>">Marketplace</a>
-                    <a href="<?= e(url('b2b/quotations.php')) ?>">Quotations</a>
+                    <div class="nav-group"><span class="nav-group-label">Sourcing</span><a href="<?= e(url('marketplace.php')) ?>">Marketplace</a><a href="<?= e(url('b2b/quotations.php')) ?>">Quotations</a><a href="<?= e(url('b2b/orders.php')) ?>">Orders</a></div>
                 <?php elseif (currentUser()['role'] === 'b2c'): ?>
-                    <a href="<?= e(url('marketplace.php')) ?>">Marketplace</a>
-                    <a href="<?= e(url('b2c/orders.php')) ?>">Orders</a>
+                    <div class="nav-group"><span class="nav-group-label">Shopping</span><a href="<?= e(url('marketplace.php')) ?>">Marketplace</a><a href="<?= e(url('b2c/orders.php')) ?>">Orders</a></div>
                 <?php endif; ?>
-                <a href="<?= e(url('profile.php')) ?>">Profile</a>
                 <?php if (currentUser()['role'] === 'admin'): ?>
-                    <a href="<?= e(url('admin/users.php')) ?>">Users</a>
-                    <a href="<?= e(url('admin/database-status.php')) ?>">DB Status</a>
+                    <div class="nav-group"><span class="nav-group-label">Operations</span><a href="<?= e(url('admin/exceptions.php')) ?>">Exceptions</a><a href="<?= e(url('admin/users.php')) ?>">Users</a><a href="<?= e(url('admin/payments.php')) ?>">Payments</a></div>
+                    <div class="nav-group"><span class="nav-group-label">Insight</span><a href="<?= e(url('admin/reports.php')) ?>">Reports</a><a href="<?= e(url('admin/database-status.php')) ?>">DB status</a></div>
                 <?php endif; ?>
-                <form method="post" action="<?= e(url('logout.php')) ?>" class="inline-form">
+                <div class="nav-group nav-account"><span class="nav-group-label">Account</span><a href="<?= e(url('profile.php')) ?>">Profile</a><form method="post" action="<?= e(url('logout.php')) ?>" class="inline-form">
                     <?= csrfField() ?>
                     <button type="submit" class="link-button">Logout</button>
-                </form>
+                </form></div>
             <?php else: ?>
                 <a href="<?= e(url('login.php')) ?>">Login</a>
                 <a class="nav-cta" href="<?= e(url('register.php')) ?>">Create account</a>

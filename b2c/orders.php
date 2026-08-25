@@ -1,11 +1,26 @@
 <?php
-require __DIR__.'/../includes/bootstrap.php';requireRole('b2c');$pdo=db();$buyerId=(int)currentUser()['user_id'];
-if($_SERVER['REQUEST_METHOD']==='POST'){
-    verifyCsrf();$listingId=filter_input(INPUT_POST,'listing_id',FILTER_VALIDATE_INT);$quantity=(float)input('quantity');
-    try{if(!$listingId)throw new RuntimeException('Select a valid listing.');$orderId=placeB2cOrder($pdo,$buyerId,$listingId,$quantity);setFlash('success',"Order #{$orderId} confirmed and stock reserved.");redirect('b2c/orders.php');}
-    catch(Throwable $e){setFlash('danger',$e->getMessage());redirect('marketplace.php');}
+require __DIR__ . '/../includes/bootstrap.php';
+requireRole('b2c');
+
+$pdo = db();
+$buyerId = (int) currentUser()['user_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'place') {
+    verifyCsrf();
+    $listingId = filter_input(INPUT_POST, 'listing_id', FILTER_VALIDATE_INT);
+    $quantity = (float) input('quantity');
+    try {
+        if (!$listingId) {
+            throw new RuntimeException('Select a valid listing.');
+        }
+        $orderId = placeB2cOrder($pdo, $buyerId, $listingId, $quantity);
+        setFlash('success', "Order #{$orderId} confirmed and stock reserved.");
+        redirect('b2c/orders.php');
+    } catch (Throwable $exception) {
+        setFlash('danger', $exception->getMessage());
+        redirect('marketplace.php');
+    }
 }
-$s=$pdo->prepare("SELECT o.*,oi.quantity,oi.selling_price,l.listing_id,b.material_type,b.color,b.unit_of_measure,u.name supplier_name FROM orders o JOIN order_item oi ON oi.order_id=o.order_id JOIN listing l ON l.listing_id=oi.listing_id JOIN textile_batch b ON b.batch_id=l.batch_id JOIN users u ON u.user_id=b.supplier_id WHERE o.buyer_id=? AND o.order_type='B2C' ORDER BY o.order_date DESC");$s->execute([$buyerId]);$orders=$s->fetchAll();
-$pageTitle='My orders';require __DIR__.'/../includes/header.php';?>
-<main class="container"><div class="page-head"><div><div class="eyebrow">Retail purchases</div><h1>My orders</h1><p>Confirmed purchases and reserved quantities.</p></div><a class="btn btn-primary" href="<?=e(url('marketplace.php'))?>">Browse marketplace</a></div><section class="panel"><div class="table-wrap"><table class="table align-middle"><thead><tr><th>Order</th><th>Material</th><th>Supplier</th><th>Quantity</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody><?php foreach($orders as $order):?><tr><td>#<?=e($order['order_id'])?></td><td><?=e($order['material_type'])?><br><small class="muted"><?=e($order['color'])?></small></td><td><?=e($order['supplier_name'])?></td><td><?=e($order['quantity'])?> <?=e($order['unit_of_measure'])?></td><td><?=e(money($order['total_amount']))?></td><td><span class="<?=e(statusClass($order['order_status']))?>"><?=e($order['order_status'])?></span></td><td><?=e(date('d M Y',strtotime($order['order_date'])))?></td></tr><?php endforeach;?><?php if(!$orders):?><tr><td colspan="7" class="text-center muted py-4">You have not placed an order yet.</td></tr><?php endif;?></tbody></table></div></section></main>
-<?php require __DIR__.'/../includes/footer.php';?>
+
+$orderType = 'B2C';
+$buyerRole = 'b2c';
+require __DIR__ . '/../includes/buyer-orders-page.php';

@@ -41,7 +41,7 @@ VALUES
 INSERT INTO orders
     (order_id, buyer_id, quotation_id, order_type, order_date, order_status, total_amount)
 VALUES
-    (1, 3, 1, 'B2B', NOW() - INTERVAL 2 DAY, 'Confirmed', 29000.00),
+    (1, 3, 1, 'B2B', NOW() - INTERVAL 2 DAY, 'Completed', 29000.00),
     (2, 4, NULL, 'B2C', NOW() - INTERVAL 1 DAY, 'Confirmed', 4000.00);
 
 INSERT INTO order_item
@@ -62,6 +62,7 @@ VALUES
     (1, 1, NULL, 1000.00, 'STOCK_ADDED', NOW() - INTERVAL 45 DAY, 'Opening inventory'),
     (2, 2, NULL, 500.00, 'STOCK_ADDED', NOW() - INTERVAL 10 DAY, 'Opening inventory'),
     (3, 1, 1, 200.00, 'RESERVED', NOW() - INTERVAL 2 DAY, 'Reserved for B2B order #1'),
-    (4, 1, 2, 20.00, 'RESERVED', NOW() - INTERVAL 1 DAY, 'Reserved for B2C order #2');
+    (4, 1, 2, 20.00, 'RESERVED', NOW() - INTERVAL 1 DAY, 'Reserved for B2C order #2'),
+    (5, 1, 1, 200.00, 'SOLD', NOW() - INTERVAL 1 DAY, 'Completed sale for B2B order #1');
 
 COMMIT;
