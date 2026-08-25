@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 function isLoggedIn(): bool
 {
-    return isset($_SESSION['user']['user_id']);
+    $user = $_SESSION['user'] ?? null;
+    return is_array($user)
+        && isset($user['user_id'], $user['role'])
+        && (int) $user['user_id'] > 0
+        && in_array($user['role'], ['supplier', 'b2b', 'b2c', 'admin'], true);
 }
 
 function currentUser(): ?array
@@ -118,4 +122,3 @@ function dashboardPath(?string $role = null): string
         default => 'login.php',
     };
 }
-
