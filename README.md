@@ -20,29 +20,27 @@ The configured machine uses XAMPP at `D:\Softwares\XAMPP` and exposes this repos
 
 ## Setup
 
-### One-click setup on another Windows computer
-
-Extract the repository, then double-click `install-jhutledger.bat`. The installer detects or installs XAMPP 8.2, copies the application to `htdocs\jhutledger`, starts Apache and MySQL, imports `schema.sql` followed by `seed.sql`, runs the database smoke test, and opens the application. A fresh XAMPP installation with the default empty `root` database password is expected.
-
 ### Manual setup
 
-1. Start MySQL and Apache from XAMPP Control Panel, or run:
+1. Install XAMPP 8.2 and place the repository at `<xampp>\htdocs\jhutledger`.
+
+2. Start MySQL and Apache from the XAMPP Control Panel. On this development machine, the equivalent commands are:
 
    ```powershell
    D:\Softwares\XAMPP\mysql_start.bat
    D:\Softwares\XAMPP\apache_start.bat
    ```
 
-2. Import the database files in order:
+3. Import `database/schema.sql`, followed by `database/seed.sql`, through phpMyAdmin. PowerShell can also perform the import when XAMPP is installed at `D:\Softwares\XAMPP`:
 
    ```powershell
    Get-Content database\schema.sql -Raw | D:\Softwares\XAMPP\mysql\bin\mysql.exe -u root
    Get-Content database\seed.sql -Raw | D:\Softwares\XAMPP\mysql\bin\mysql.exe -u root
    ```
 
-   The same files can be imported through phpMyAdmin.
+4. Visit `http://localhost/jhutledger/`.
 
-3. Visit `http://localhost/jhutledger/`.
+The former machine-specific batch installer has been removed. Manual setup keeps the repository portable across computers where XAMPP may be installed in different locations.
 
 Environment overrides are supported through `JHUTLEDGER_DB_HOST`, `JHUTLEDGER_DB_PORT`, `JHUTLEDGER_DB_NAME`, `JHUTLEDGER_DB_USER`, `JHUTLEDGER_DB_PASSWORD`, `JHUTLEDGER_BASE_URL`, and the comma-separated `JHUTLEDGER_ADMIN_EMAILS`.
 

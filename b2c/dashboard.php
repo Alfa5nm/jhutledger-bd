@@ -11,15 +11,67 @@ $queries = [
 ];
 $stats = [];
 foreach ($queries as $label => [$sql,$params]) {
-    $s = $pdo->prepare($sql);
-    $s->execute($params);
-    $stats[$label] = $s->fetchColumn();
+    $statement = $pdo->prepare($sql);
+    $statement->execute($params);
+    $stats[$label] = $statement->fetchColumn();
 }
-$s = $pdo->prepare("SELECT COUNT(*) FROM orders o LEFT JOIN payment p ON p.order_id=o.order_id WHERE o.buyer_id=? AND o.order_status IN ('Confirmed','Processing') AND (p.payment_id IS NULL OR p.payment_status IN ('Failed','Pending'))");
-$s->execute([$userId]);
-$paymentAttention = (int)$s->fetchColumn();
+$statement = $pdo->prepare("SELECT COUNT(*) FROM orders o LEFT JOIN payment p ON p.order_id=o.order_id WHERE o.buyer_id=? AND o.order_status IN ('Confirmed','Processing') AND (p.payment_id IS NULL OR p.payment_status IN ('Failed','Pending'))");
+$statement->execute([$userId]);
+$paymentAttention = (int)$statement->fetchColumn();
 $pageTitle = 'B2C buyer dashboard';
 require __DIR__ . '/../includes/header.php';
 ?>
-<main class="container"><div class="page-head"><div><div class="eyebrow">Retail buyer workspace</div><h1>Welcome, <?=e(currentUser()['name'])?></h1><p>Track retail listings, purchases, and payment activity.</p></div><span class="badge-soft">B2C Buyer</span></div><div class="stats-grid"><?php foreach ($stats as $label => $value):?><div class="stat-card"><span><?=e($label)?></span><strong data-count><?=e($value)?></strong></div><?php endforeach;?></div><section class="panel attention-panel"><div><div class="eyebrow">Needs attention</div><h2 class="h4">Keep orders moving</h2></div><div class="attention-actions"><a href="<?=e(url('b2c/orders.php'))?>"><strong><?=e($stats['Pending orders'])?></strong><span>active orders</span></a><a href="<?=e(url('b2c/orders.php'))?>"><strong><?=e($paymentAttention)?></strong><span>payments to review</span></a></div></section><section class="panel"><h2 class="h4">Retail sourcing</h2><p>Browse bundle-sized listings and place an order against live stock.</p><div class="role-tool-grid"><a href="<?=e(url('marketplace.php'))?>">Marketplace <span>Browse retail bundles</span></a><a href="<?=e(url('b2c/orders.php'))?>">Orders <span>Track, pay, and print</span></a></div></section></main>
+<main class="container">
+<div class="page-head">
+<div>
+<div class="eyebrow">Retail buyer workspace</div>
+<h1>Welcome, <?=e(currentUser()['name'])?>
+</h1>
+<p>Track retail listings, purchases, and payment activity.</p>
+</div>
+<span class="badge-soft">B2C Buyer</span>
+</div>
+<div class="stats-grid">
+<?php foreach ($stats as $label => $value):?>
+<div class="stat-card">
+<span>
+<?=e($label)?>
+</span>
+<strong data-count>
+<?=e($value)?>
+</strong>
+</div>
+<?php endforeach;?>
+</div>
+<section class="panel attention-panel">
+<div>
+<div class="eyebrow">Needs attention</div>
+<h2 class="h4">Keep orders moving</h2>
+</div>
+<div class="attention-actions">
+<a href="<?=e(url('b2c/orders.php'))?>">
+<strong>
+<?=e($stats['Pending orders'])?>
+</strong>
+<span>active orders</span>
+</a>
+<a href="<?=e(url('b2c/orders.php'))?>">
+<strong>
+<?=e($paymentAttention)?>
+</strong>
+<span>payments to review</span>
+</a>
+</div>
+</section>
+<section class="panel">
+<h2 class="h4">Retail sourcing</h2>
+<p>Browse bundle-sized listings and place an order against live stock.</p>
+<div class="role-tool-grid">
+<a href="<?=e(url('marketplace.php'))?>">Marketplace <span>Browse retail bundles</span>
+</a>
+<a href="<?=e(url('b2c/orders.php'))?>">Orders <span>Track, pay, and print</span>
+</a>
+</div>
+</section>
+</main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

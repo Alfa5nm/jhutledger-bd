@@ -47,36 +47,83 @@ $pageTitle = 'Order payment';
 require __DIR__ . '/includes/header.php';
 ?>
 <main class="container narrow">
-    <div class="page-head">
-        <div><div class="eyebrow">Simulated payment</div><h1>Order #<?= e($orderId) ?></h1><p>Submit a payment method for administrator verification.</p></div>
-    </div>
-    <section class="panel mt-0">
-        <dl class="detail-grid">
-            <div><dt>Material</dt><dd><?= e($order['material_type']) ?></dd></div>
-            <div><dt>Supplier</dt><dd><?= e($order['supplier_name']) ?></dd></div>
-            <div><dt>Quantity</dt><dd><?= e($order['quantity']) ?> <?= e($order['unit_of_measure']) ?></dd></div>
-            <div><dt>Amount</dt><dd><?= e(money($order['total_amount'])) ?></dd></div>
-            <div><dt>Order status</dt><dd><span class="<?= e(statusClass($order['order_status'])) ?>"><?= e($order['order_status']) ?></span></dd></div>
-            <div><dt>Payment status</dt><dd><span class="<?= e(statusClass($order['payment_status'] ?? 'Not submitted')) ?>"><?= e($order['payment_status'] ?? 'Not submitted') ?></span></dd></div>
-        </dl>
-        <?php if ($canSubmit): ?>
-            <form method="post" class="mt-4">
-                <?= csrfField() ?>
-                <input type="hidden" name="order_id" value="<?= e($orderId) ?>">
-                <label class="form-label" for="payment_method">Payment method</label>
-                <select class="form-select" id="payment_method" name="payment_method" required>
-                    <option value="">Choose a method</option>
-                    <?php foreach (['Cash', 'Bank Transfer', 'Mobile Banking', 'Card'] as $method): ?>
-                        <option value="<?= e($method) ?>" <?= $order['payment_method'] === $method ? 'selected' : '' ?>><?= e($method) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <p class="form-note">This faculty demonstration records a simulated payment; no real money is transferred.</p>
-                <button class="btn btn-primary w-100" type="submit"><?= $order['payment_status'] === 'Failed' ? 'Resubmit payment' : 'Submit payment' ?></button>
-            </form>
-        <?php else: ?>
-            <div class="alert alert-info mt-4 mb-0">This order does not currently accept another payment submission.</div>
-        <?php endif; ?>
-        <div class="action-row mt-3"><a class="btn btn-outline-primary" href="<?=e(url('order.php?id='.$orderId))?>">View order details</a><a class="btn btn-outline-primary" href="<?=e(url('invoice.php?id='.$orderId))?>">Print invoice</a></div>
-    </section>
+<div class="page-head">
+<div>
+<div class="eyebrow">Simulated payment</div>
+<h1>Order #<?= e($orderId) ?>
+</h1>
+<p>Submit a payment method for administrator verification.</p>
+</div>
+</div>
+<section class="panel mt-0">
+<dl class="detail-grid">
+<div>
+<dt>Material</dt>
+<dd>
+<?= e($order['material_type']) ?>
+</dd>
+</div>
+<div>
+<dt>Supplier</dt>
+<dd>
+<?= e($order['supplier_name']) ?>
+</dd>
+</div>
+<div>
+<dt>Quantity</dt>
+<dd>
+<?= e($order['quantity']) ?>
+<?= e($order['unit_of_measure']) ?>
+</dd>
+</div>
+<div>
+<dt>Amount</dt>
+<dd>
+<?= e(money($order['total_amount'])) ?>
+</dd>
+</div>
+<div>
+<dt>Order status</dt>
+<dd>
+<span class="<?= e(statusClass($order['order_status'])) ?>">
+<?= e($order['order_status']) ?>
+</span>
+</dd>
+</div>
+<div>
+<dt>Payment status</dt>
+<dd>
+<span class="<?= e(statusClass($order['payment_status'] ?? 'Not submitted')) ?>">
+<?= e($order['payment_status'] ?? 'Not submitted') ?>
+</span>
+</dd>
+</div>
+</dl>
+<?php if ($canSubmit): ?>
+<form method="post" class="mt-4">
+<?= csrfField() ?>
+<input type="hidden" name="order_id" value="<?= e($orderId) ?>">
+<label class="form-label" for="payment_method">Payment method</label>
+<select class="form-select" id="payment_method" name="payment_method" required>
+<option value="">Choose a method</option>
+<?php foreach (['Cash', 'Bank Transfer', 'Mobile Banking', 'Card'] as $method): ?>
+<option value="<?= e($method) ?>" <?= $order['payment_method'] === $method ? 'selected' : '' ?>>
+<?= e($method) ?>
+</option>
+<?php endforeach; ?>
+</select>
+<p class="form-note">This faculty demonstration records a simulated payment; no real money is transferred.</p>
+<button class="btn btn-primary w-100" type="submit">
+<?= $order['payment_status'] === 'Failed' ? 'Resubmit payment' : 'Submit payment' ?>
+</button>
+</form>
+<?php else: ?>
+<div class="alert alert-info mt-4 mb-0">This order does not currently accept another payment submission.</div>
+<?php endif; ?>
+<div class="action-row mt-3">
+<a class="btn btn-outline-primary" href="<?=e(url('order.php?id='.$orderId))?>">View order details</a>
+<a class="btn btn-outline-primary" href="<?=e(url('invoice.php?id='.$orderId))?>">Print invoice</a>
+</div>
+</section>
 </main>
 <?php require __DIR__ . '/includes/footer.php'; ?>

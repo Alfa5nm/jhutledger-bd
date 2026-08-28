@@ -12,12 +12,160 @@ $inactiveOpen = $pdo->query("SELECT DISTINCT u.user_id,u.name,u.email,o.order_id
 $pageTitle = 'Operational exceptions';
 require __DIR__ . '/../includes/header.php';
 ?>
-<main class="container"><div class="page-head"><div><div class="eyebrow">Admin / Operations</div><h1>Exception monitor</h1><p>Live queues that need attention, derived from the existing academic schema.</p></div><a class="btn btn-outline-primary" href="<?= e(url('admin/dashboard.php')) ?>">Admin dashboard</a></div>
-<div class="exception-grid"><?php foreach ($counts as $label => $value): ?><a class="exception-card <?= $value ? 'has-items' : '' ?>" href="#<?= e(strtolower(str_replace(' ', '-', $label))) ?>"><span><?= e($label) ?></span><strong><?= e($value) ?></strong><small><?= $value ? 'Needs review' : 'No issues' ?></small></a><?php endforeach; ?></div>
-<section class="panel" id="pending-payments"><h2 class="h4">Pending payments</h2><div class="queue-list"><?php foreach ($pending as $row):?><article><div><span class="badge-warning">Pending</span><strong>Payment #<?=e($row['payment_id'])?> · <?=e(money($row['amount']))?></strong><small><?=e($row['buyer_name'])?> · <?=e($row['payment_method'])?></small></div><div class="action-row"><a href="<?=e(url('order.php?id='.$row['order_id']))?>">Order #<?=e($row['order_id'])?></a><a class="btn btn-sm btn-primary" href="<?=e(url('admin/payments.php?q='.$row['order_id']))?>">Review</a></div></article><?php endforeach;?><?php if (!$pending):?><p class="muted mb-0">No pending payments.</p><?php endif;?></div></section>
-<section class="panel" id="overdue-confirmed-orders"><h2 class="h4">Overdue confirmed orders</h2><div class="queue-list"><?php foreach ($overdue as $row):?><article><div><span class="badge-warning">Confirmed</span><strong>Order #<?=e($row['order_id'])?> · <?=e($row['order_type'])?></strong><small><?=e($row['buyer_name'])?> · waiting since <?=e(date('d M Y', strtotime($row['order_date'])))?></small></div><a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$row['order_id']))?>">View order</a></article><?php endforeach;?><?php if (!$overdue):?><p class="muted mb-0">No overdue confirmed orders.</p><?php endif;?></div></section>
-<section class="panel" id="expired-open-quotations"><h2 class="h4">Expired open quotations</h2><div class="queue-list"><?php foreach ($expired as $row):?><article><div><span class="badge-danger">Expired</span><strong>Quotation #<?=e($row['quotation_id'])?> · <?=e($row['material_type'])?></strong><small><?=e($row['buyer_name'])?> · expired <?=e(date('d M Y', strtotime($row['expiry_date'])))?></small></div></article><?php endforeach;?><?php if (!$expired):?><p class="muted mb-0">No expired open quotations.</p><?php endif;?></div></section>
-<section class="panel" id="low-stock-batches"><h2 class="h4">Low-stock batches</h2><div class="queue-list"><?php foreach ($lowStock as $row):$percent = (float)$row['total_quantity'] > 0 ? round((float)$row['available_quantity'] / (float)$row['total_quantity'] * 100) : 0;?><article><div><span class="badge-warning"><?=e($percent)?>% left</span><strong>Batch #<?=e($row['batch_id'])?> · <?=e($row['material_type'])?></strong><small><?=e($row['supplier_name'])?> · <?=e($row['available_quantity'])?> / <?=e($row['total_quantity'])?> <?=e($row['unit_of_measure'])?></small></div></article><?php endforeach;?><?php if (!$lowStock):?><p class="muted mb-0">No low-stock batches.</p><?php endif;?></div></section>
-<section class="panel" id="zero-quantity-active-listings"><h2 class="h4">Zero-quantity active listings</h2><div class="queue-list"><?php foreach ($zeroListings as $row):?><article><div><span class="badge-danger">Needs archive</span><strong>Listing #<?=e($row['listing_id'])?> · <?=e($row['material_type'])?></strong><small><?=e($row['supplier_name'])?> · listing <?=e($row['listed_quantity'])?> / batch <?=e($row['available_quantity'])?> <?=e($row['unit_of_measure'])?></small></div></article><?php endforeach;?><?php if (!$zeroListings):?><p class="muted mb-0">No active zero-quantity listings.</p><?php endif;?></div></section>
-<section class="panel" id="inactive-users-with-open-orders"><h2 class="h4">Inactive users with open orders</h2><div class="queue-list"><?php foreach ($inactiveOpen as $row):?><article><div><span class="badge-danger">Inactive account</span><strong><?=e($row['name'])?> · Order #<?=e($row['order_id'])?></strong><small><?=e($row['email'])?> · <?=e($row['order_status'])?></small></div><a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$row['order_id']))?>">View order</a></article><?php endforeach;?><?php if (!$inactiveOpen):?><p class="muted mb-0">No inactive users have open orders.</p><?php endif;?></div></section>
-</main><?php require __DIR__ . '/../includes/footer.php'; ?>
+<main class="container">
+<div class="page-head">
+<div>
+<div class="eyebrow">Admin / Operations</div>
+<h1>Exception monitor</h1>
+<p>Live queues that need attention, derived from the existing academic schema.</p>
+</div>
+<a class="btn btn-outline-primary" href="<?= e(url('admin/dashboard.php')) ?>">Admin dashboard</a>
+</div>
+<div class="exception-grid">
+<?php foreach ($counts as $label => $value): ?>
+<a class="exception-card <?= $value ? 'has-items' : '' ?>" href="#<?= e(strtolower(str_replace(' ', '-', $label))) ?>">
+<span>
+<?= e($label) ?>
+</span>
+<strong>
+<?= e($value) ?>
+</strong>
+<small>
+<?= $value ? 'Needs review' : 'No issues' ?>
+</small>
+</a>
+<?php endforeach; ?>
+</div>
+<section class="panel" id="pending-payments">
+<h2 class="h4">Pending payments</h2>
+<div class="queue-list">
+<?php foreach ($pending as $row):?>
+<article>
+<div>
+<span class="badge-warning">Pending</span>
+<strong>Payment #<?=e($row['payment_id'])?> · <?=e(money($row['amount']))?>
+</strong>
+<small>
+<?=e($row['buyer_name'])?> · <?=e($row['payment_method'])?>
+</small>
+</div>
+<div class="action-row">
+<a href="<?=e(url('order.php?id='.$row['order_id']))?>">Order #<?=e($row['order_id'])?>
+</a>
+<a class="btn btn-sm btn-primary" href="<?=e(url('admin/payments.php?q='.$row['order_id']))?>">Review</a>
+</div>
+</article>
+<?php endforeach;?>
+<?php if (!$pending):?>
+<p class="muted mb-0">No pending payments.</p>
+<?php endif;?>
+</div>
+</section>
+<section class="panel" id="overdue-confirmed-orders">
+<h2 class="h4">Overdue confirmed orders</h2>
+<div class="queue-list">
+<?php foreach ($overdue as $row):?>
+<article>
+<div>
+<span class="badge-warning">Confirmed</span>
+<strong>Order #<?=e($row['order_id'])?> · <?=e($row['order_type'])?>
+</strong>
+<small>
+<?=e($row['buyer_name'])?> · waiting since <?=e(date('d M Y', strtotime($row['order_date'])))?>
+</small>
+</div>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$row['order_id']))?>">View order</a>
+</article>
+<?php endforeach;?>
+<?php if (!$overdue):?>
+<p class="muted mb-0">No overdue confirmed orders.</p>
+<?php endif;?>
+</div>
+</section>
+<section class="panel" id="expired-open-quotations">
+<h2 class="h4">Expired open quotations</h2>
+<div class="queue-list">
+<?php foreach ($expired as $row):?>
+<article>
+<div>
+<span class="badge-danger">Expired</span>
+<strong>Quotation #<?=e($row['quotation_id'])?> · <?=e($row['material_type'])?>
+</strong>
+<small>
+<?=e($row['buyer_name'])?> · expired <?=e(date('d M Y', strtotime($row['expiry_date'])))?>
+</small>
+</div>
+</article>
+<?php endforeach;?>
+<?php if (!$expired):?>
+<p class="muted mb-0">No expired open quotations.</p>
+<?php endif;?>
+</div>
+</section>
+<section class="panel" id="low-stock-batches">
+<h2 class="h4">Low-stock batches</h2>
+<div class="queue-list">
+<?php foreach ($lowStock as $row):$percent = (float)$row['total_quantity'] > 0 ? round((float)$row['available_quantity'] / (float)$row['total_quantity'] * 100) : 0;?>
+<article>
+<div>
+<span class="badge-warning">
+<?=e($percent)?>% left</span>
+<strong>Batch #<?=e($row['batch_id'])?> · <?=e($row['material_type'])?>
+</strong>
+<small>
+<?=e($row['supplier_name'])?> · <?=e($row['available_quantity'])?> / <?=e($row['total_quantity'])?>
+<?=e($row['unit_of_measure'])?>
+</small>
+</div>
+</article>
+<?php endforeach;?>
+<?php if (!$lowStock):?>
+<p class="muted mb-0">No low-stock batches.</p>
+<?php endif;?>
+</div>
+</section>
+<section class="panel" id="zero-quantity-active-listings">
+<h2 class="h4">Zero-quantity active listings</h2>
+<div class="queue-list">
+<?php foreach ($zeroListings as $row):?>
+<article>
+<div>
+<span class="badge-danger">Needs archive</span>
+<strong>Listing #<?=e($row['listing_id'])?> · <?=e($row['material_type'])?>
+</strong>
+<small>
+<?=e($row['supplier_name'])?> · listing <?=e($row['listed_quantity'])?> / batch <?=e($row['available_quantity'])?>
+<?=e($row['unit_of_measure'])?>
+</small>
+</div>
+</article>
+<?php endforeach;?>
+<?php if (!$zeroListings):?>
+<p class="muted mb-0">No active zero-quantity listings.</p>
+<?php endif;?>
+</div>
+</section>
+<section class="panel" id="inactive-users-with-open-orders">
+<h2 class="h4">Inactive users with open orders</h2>
+<div class="queue-list">
+<?php foreach ($inactiveOpen as $row):?>
+<article>
+<div>
+<span class="badge-danger">Inactive account</span>
+<strong>
+<?=e($row['name'])?> · Order #<?=e($row['order_id'])?>
+</strong>
+<small>
+<?=e($row['email'])?> · <?=e($row['order_status'])?>
+</small>
+</div>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$row['order_id']))?>">View order</a>
+</article>
+<?php endforeach;?>
+<?php if (!$inactiveOpen):?>
+<p class="muted mb-0">No inactive users have open orders.</p>
+<?php endif;?>
+</div>
+</section>
+</main>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

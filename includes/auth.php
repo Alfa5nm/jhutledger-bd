@@ -106,7 +106,12 @@ function requireRole(string|array $roles): void
     if (!in_array(currentUser()['role'], $allowed, true)) {
         http_response_code(403);
         require __DIR__ . '/header.php';
-        echo '<main class="container narrow"><div class="panel"><h1>Access denied</h1><p>Your account does not have permission to open this page.</p></div></main>';
+        echo '<main class="container narrow">
+<div class="panel">
+<h1>Access denied</h1>
+<p>Your account does not have permission to open this page.</p>
+</div>
+</main>';
         require __DIR__ . '/footer.php';
         exit;
     }
