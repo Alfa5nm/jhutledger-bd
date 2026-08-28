@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'storage_location' => input('storage_location'), 'entry_date' => input('entry_date'),
         'unit_of_measure' => input('unit_of_measure'), 'status' => input('status'),
     ];
-    foreach (['material_type','composition','color','storage_location','unit_of_measure'] as $field) {
+    foreach (['material_type', 'composition', 'color', 'storage_location', 'unit_of_measure'] as $field) {
         if ($values[$field] === '') {
             $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
         }
@@ -52,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_numeric($values['average_cost']) || (float) $values['average_cost'] < 0) {
         $errors[] = 'Average cost cannot be negative.';
     }
-    if (!in_array($values['condition'], ['New','Surplus','Dead Stock','Recycled'], true)) {
+    if (!in_array($values['condition'], ['New', 'Surplus', 'Dead Stock', 'Recycled'], true)) {
         $errors[] = 'Select a valid condition.';
     }
-    if (!in_array($values['status'], ['Active','Inactive'], true)) {
+    if (!in_array($values['status'], ['Active', 'Inactive'], true)) {
         $errors[] = 'Select a valid status.';
     }
     if (!validDate($values['entry_date'])) {
@@ -90,9 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      available_quantity=?, average_cost=?, storage_location=?, entry_date=?, unit_of_measure=?, status=?
                      WHERE batch_id=?'
                 )->execute([
-                    $values['material_type'],$values['composition'],$values['color'],$values['gsm'],$values['condition'],
-                    $newTotal,$newAvailable,$values['average_cost'],$values['storage_location'],$values['entry_date'],
-                    $values['unit_of_measure'],$values['status'],$batchId,
+                    $values['material_type'], $values['composition'], $values['color'], $values['gsm'], $values['condition'],
+                    $newTotal, $newAvailable, $values['average_cost'], $values['storage_location'], $values['entry_date'],
+                    $values['unit_of_measure'], $values['status'], $batchId,
                 ]);
                 if (abs($delta) > 0.0001) {
                     $type = $delta > 0 ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
@@ -109,9 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      available_quantity,average_cost,storage_location,entry_date,unit_of_measure,status)
                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
                 )->execute([
-                    $supplierId,$values['material_type'],$values['composition'],$values['color'],$values['gsm'],
-                    $values['condition'],$values['total_quantity'],$values['total_quantity'],$values['average_cost'],
-                    $values['storage_location'],$values['entry_date'],$values['unit_of_measure'],$values['status'],
+                    $supplierId, $values['material_type'], $values['composition'], $values['color'], $values['gsm'],
+                    $values['condition'], $values['total_quantity'], $values['total_quantity'], $values['average_cost'],
+                    $values['storage_location'], $values['entry_date'], $values['unit_of_measure'], $values['status'],
                 ]);
                 $batchId = (int) $pdo->lastInsertId();
                 $pdo->prepare("INSERT INTO stock_transaction (batch_id, quantity, transaction_type, remarks) VALUES (?, ?, 'STOCK_ADDED', 'Opening quantity')")
@@ -142,7 +142,7 @@ $statement = $pdo->prepare(
 );
 $statement->execute([$supplierId]);
 $batches = $statement->fetchAll();
-$form = $edit ?: ['batch_id' => '','material_type' => '','composition' => '','color' => '','gsm' => '','condition' => 'Surplus','total_quantity' => '','average_cost' => '','storage_location' => '','entry_date' => date('Y-m-d'),'unit_of_measure' => 'kg','status' => 'Active'];
+$form = $edit ?: ['batch_id' => '', 'material_type' => '', 'composition' => '', 'color' => '', 'gsm' => '', 'condition' => 'Surplus', 'total_quantity' => '', 'average_cost' => '', 'storage_location' => '', 'entry_date' => date('Y-m-d'), 'unit_of_measure' => 'kg', 'status' => 'Active'];
 $pageTitle = 'Textile batches';
 require __DIR__ . '/../includes/header.php';
 ?>
@@ -168,7 +168,7 @@ require __DIR__ . '/../includes/header.php';
 <?php endif;?>
 <section class="panel">
 <h2 class="h4">
-<?=$edit ? 'Edit batch #'.e($edit['batch_id']) : 'Add a textile batch'?>
+<?=$edit ? 'Edit batch #' . e($edit['batch_id']) : 'Add a textile batch'?>
 </h2>
 <form method="post">
 <?=csrfField()?>
@@ -194,7 +194,7 @@ require __DIR__ . '/../includes/header.php';
 <div>
 <label class="form-label">Condition</label>
 <select class="form-select" name="condition">
-<?php foreach (['New','Surplus','Dead Stock','Recycled'] as $option):?>
+<?php foreach (['New', 'Surplus', 'Dead Stock', 'Recycled'] as $option):?>
 <option <?=$form['condition'] === $option ? 'selected' : ''?>>
 <?=e($option)?>
 </option>

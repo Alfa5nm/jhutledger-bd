@@ -4,10 +4,10 @@ requireRole('b2c');
 $pdo = db();
 $userId = currentUser()['user_id'];
 $queries = [
-    'Active B2C listings' => ['SELECT COUNT(*) FROM b2c_listing bl JOIN listing l ON l.listing_id=bl.listing_id WHERE l.status=\'Active\'',[]],
-    'My orders' => ['SELECT COUNT(*) FROM orders WHERE buyer_id=? AND order_type=\'B2C\'',[$userId]],
-    'Pending orders' => ['SELECT COUNT(*) FROM orders WHERE buyer_id=? AND order_status IN (\'Pending\',\'Confirmed\',\'Processing\')',[$userId]],
-    'Paid orders' => ['SELECT COUNT(*) FROM payment p JOIN orders o ON o.order_id=p.order_id WHERE o.buyer_id=? AND p.payment_status=\'Paid\'',[$userId]],
+    'Active B2C listings' => ['SELECT COUNT(*) FROM b2c_listing bl JOIN listing l ON l.listing_id=bl.listing_id WHERE l.status=\'Active\'', []],
+    'My orders' => ['SELECT COUNT(*) FROM orders WHERE buyer_id=? AND order_type=\'B2C\'', [$userId]],
+    'Pending orders' => ['SELECT COUNT(*) FROM orders WHERE buyer_id=? AND order_status IN (\'Pending\',\'Confirmed\',\'Processing\')', [$userId]],
+    'Paid orders' => ['SELECT COUNT(*) FROM payment p JOIN orders o ON o.order_id=p.order_id WHERE o.buyer_id=? AND p.payment_status=\'Paid\'', [$userId]],
 ];
 $stats = [];
 foreach ($queries as $label => [$sql,$params]) {
@@ -17,7 +17,7 @@ foreach ($queries as $label => [$sql,$params]) {
 }
 $statement = $pdo->prepare("SELECT COUNT(*) FROM orders o LEFT JOIN payment p ON p.order_id=o.order_id WHERE o.buyer_id=? AND o.order_status IN ('Confirmed','Processing') AND (p.payment_id IS NULL OR p.payment_status IN ('Failed','Pending'))");
 $statement->execute([$userId]);
-$paymentAttention = (int)$statement->fetchColumn();
+$paymentAttention = (int) $statement->fetchColumn();
 $pageTitle = 'B2C buyer dashboard';
 require __DIR__ . '/../includes/header.php';
 ?>

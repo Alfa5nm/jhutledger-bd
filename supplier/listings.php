@@ -2,7 +2,7 @@
 require __DIR__ . '/../includes/bootstrap.php';
 requireRole('supplier');
 $pdo = db();
-$supplierId = (int)currentUser()['user_id'];
+$supplierId = (int) currentUser()['user_id'];
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -10,26 +10,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = input('action');
     $listingId = filter_input(INPUT_POST, 'listing_id', FILTER_VALIDATE_INT) ?: null;
     if ($action === 'archive' && $listingId) {
-        $statement = $pdo->prepare("UPDATE listing l JOIN textile_batch b ON b.batch_id=l.batch_id SET l.status='Inactive' WHERE l.listing_id=? AND b.supplier_id=?");
-        $statement->execute([$listingId,$supplierId]);
-        setFlash($statement->rowCount() ? 'success' : 'danger', $statement->rowCount() ? 'Listing archived.' : 'Listing not found.');
+        $statement = $pdo->prepare(
+            "UPDATE listing AS l
+             JOIN textile_batch AS b ON b.batch_id = l.batch_id
+             SET l.status = 'Inactive'
+             WHERE l.listing_id = ? AND b.supplier_id = ?"
+        );
+        $statement->execute([$listingId, $supplierId]);
+        $wasArchived = $statement->rowCount() > 0;
+        setFlash(
+            $wasArchived ? 'success' : 'danger',
+            $wasArchived ? 'Listing archived.' : 'Listing not found.'
+        );
         redirect('supplier/listings.php');
     }
-    $batchId = (int)input('batch_id');
+    $batchId = (int) input('batch_id');
     $type = input('listing_type');
-    $quantity = (float)input('listed_quantity');
+    $quantity = (float) input('listed_quantity');
     $status = input('status');
-    $minimum = $type === 'B2B' ? (float)input('minimum_quantity') : 0.0;
-    $bulkPrice = $type === 'B2B' ? (float)input('bulk_unit_price') : 0.0;
-    $bundle = $type === 'B2C' ? (float)input('bundle_size') : 0.0;
-    $fixedPrice = $type === 'B2C' ? (float)input('fixed_unit_price') : 0.0;
+    $minimum = $type === 'B2B' ? (float) input('minimum_quantity') : 0.0;
+    $bulkPrice = $type === 'B2B' ? (float) input('bulk_unit_price') : 0.0;
+    $bundle = $type === 'B2C' ? (float) input('bundle_size') : 0.0;
+    $fixedPrice = $type === 'B2C' ? (float) input('fixed_unit_price') : 0.0;
     if ($batchId <= 0 || $quantity <= 0) {
         $errors[] = 'Select a batch and enter a positive listed quantity.';
     }
-    if (!in_array($type, ['B2B','B2C'], true)) {
+    if (!in_array($type, ['B2B', 'B2C'], true)) {
         $errors[] = 'Select a valid listing type.';
     }
-    if (!in_array($status, ['Active','Inactive'], true)) {
+    if (!in_array($status, ['Active', 'Inactive'], true)) {
         $errors[] = 'Select a valid status.';
     }
     if ($type === 'B2B' && $minimum <= 0) {
@@ -54,44 +63,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
         try {
             $statement = $pdo->prepare('SELECT * FROM textile_batch WHERE batch_id=? AND supplier_id=? FOR UPDATE');
-            $statement->execute([$batchId,$supplierId]);
+            $statement->execute([$batchId, $supplierId]);
             $batch = $statement->fetch();
             if (!$batch) {
                 throw new RuntimeException('Batch not found.');
             }
             if ($listingId) {
-                $statement = $pdo->prepare("SELECT l.*,IF(bl.listing_id IS NULL,'B2C','B2B') listing_type FROM listing l JOIN textile_batch b ON b.batch_id=l.batch_id LEFT JOIN b2b_listing bl ON bl.listing_id=l.listing_id WHERE l.listing_id=? AND b.supplier_id=? FOR UPDATE");
-                $statement->execute([$listingId,$supplierId]);
+                $statement = $pdo->prepare(
+                    "SELECT l.*, IF(bl.listing_id IS NULL, 'B2C', 'B2B') AS listing_type
+                     FROM listing AS l
+                     JOIN textile_batch AS b ON b.batch_id = l.batch_id
+                     LEFT JOIN b2b_listing AS bl ON bl.listing_id = l.listing_id
+                     WHERE l.listing_id = ? AND b.supplier_id = ?
+                     FOR UPDATE"
+                );
+                $statement->execute([$listingId, $supplierId]);
                 $old = $statement->fetch();
                 if (!$old) {
                     throw new RuntimeException('Listing not found.');
                 }
-                if ((int)$old['batch_id'] !== $batchId || $old['listing_type'] !== $type) {
+                if ((int) $old['batch_id'] !== $batchId || $old['listing_type'] !== $type) {
                     throw new RuntimeException('A listing cannot change its batch or sales channel after creation.');
                 }
             }
-            $statement = $pdo->prepare("SELECT COALESCE(SUM(listed_quantity),0) FROM listing WHERE batch_id=? AND status='Active' AND listing_id<>?");
-            $statement->execute([$batchId,$listingId ?: 0]);
-            $other = (float)$statement->fetchColumn();
-            $remaining = max(0, (float)$batch['available_quantity'] - $other);
+            $statement = $pdo->prepare(
+                "SELECT COALESCE(SUM(listed_quantity), 0)
+                 FROM listing
+                 WHERE batch_id = ? AND status = 'Active' AND listing_id <> ?"
+            );
+            $statement->execute([$batchId, $listingId ?: 0]);
+            $other = (float) $statement->fetchColumn();
+            $remaining = max(0, (float) $batch['available_quantity'] - $other);
             if ($status === 'Active' && $quantity > $remaining + 0.0001) {
-                throw new RuntimeException('Only '.number_format($remaining, 2).' '.$batch['unit_of_measure'].' remains available for allocation in this batch.');
+                throw new RuntimeException('Only ' . number_format($remaining, 2) . ' ' . $batch['unit_of_measure'] . ' remains available for allocation in this batch.');
             }
             if ($listingId) {
-                $pdo->prepare('UPDATE listing SET listed_quantity=?,status=? WHERE listing_id=?')->execute([$quantity,$status,$listingId]);
+                $pdo->prepare('UPDATE listing SET listed_quantity=?,status=? WHERE listing_id=?')->execute([$quantity, $status, $listingId]);
                 if ($type === 'B2B') {
-                    $pdo->prepare('UPDATE b2b_listing SET minimum_quantity=?,bulk_unit_price=? WHERE listing_id=?')->execute([$minimum,$bulkPrice,$listingId]);
+                    $pdo->prepare('UPDATE b2b_listing SET minimum_quantity=?,bulk_unit_price=? WHERE listing_id=?')->execute([$minimum, $bulkPrice, $listingId]);
                 } else {
-                    $pdo->prepare('UPDATE b2c_listing SET bundle_size=?,fixed_unit_price=? WHERE listing_id=?')->execute([$bundle,$fixedPrice,$listingId]);
+                    $pdo->prepare('UPDATE b2c_listing SET bundle_size=?,fixed_unit_price=? WHERE listing_id=?')->execute([$bundle, $fixedPrice, $listingId]);
                 }
                 setFlash('success', 'Listing updated successfully.');
             } else {
-                $pdo->prepare('INSERT INTO listing(batch_id,listed_quantity,status) VALUES(?,?,?)')->execute([$batchId,$quantity,$status]);
-                $listingId = (int)$pdo->lastInsertId();
+                $pdo->prepare('INSERT INTO listing(batch_id,listed_quantity,status) VALUES(?,?,?)')->execute([$batchId, $quantity, $status]);
+                $listingId = (int) $pdo->lastInsertId();
                 if ($type === 'B2B') {
-                    $pdo->prepare('INSERT INTO b2b_listing(listing_id,minimum_quantity,bulk_unit_price) VALUES(?,?,?)')->execute([$listingId,$minimum,$bulkPrice]);
+                    $pdo->prepare('INSERT INTO b2b_listing(listing_id,minimum_quantity,bulk_unit_price) VALUES(?,?,?)')->execute([$listingId, $minimum, $bulkPrice]);
                 } else {
-                    $pdo->prepare('INSERT INTO b2c_listing(listing_id,bundle_size,fixed_unit_price) VALUES(?,?,?)')->execute([$listingId,$bundle,$fixedPrice]);
+                    $pdo->prepare('INSERT INTO b2c_listing(listing_id,bundle_size,fixed_unit_price) VALUES(?,?,?)')->execute([$listingId, $bundle, $fixedPrice]);
                 }
                 setFlash('success', 'Marketplace listing created.');
             }
@@ -106,16 +126,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $edit = null;
 if (isset($_GET['edit'])) {
-    $statement = $pdo->prepare("SELECT l.*,IF(bl.listing_id IS NULL,'B2C','B2B') listing_type,bl.minimum_quantity,bl.bulk_unit_price,bc.bundle_size,bc.fixed_unit_price FROM listing l JOIN textile_batch b ON b.batch_id=l.batch_id LEFT JOIN b2b_listing bl ON bl.listing_id=l.listing_id LEFT JOIN b2c_listing bc ON bc.listing_id=l.listing_id WHERE l.listing_id=? AND b.supplier_id=?");
-    $statement->execute([(int)$_GET['edit'],$supplierId]);
+    $statement = $pdo->prepare(
+        "SELECT l.*, IF(bl.listing_id IS NULL, 'B2C', 'B2B') AS listing_type,
+                bl.minimum_quantity, bl.bulk_unit_price, bc.bundle_size, bc.fixed_unit_price
+         FROM listing AS l
+         JOIN textile_batch AS b ON b.batch_id = l.batch_id
+         LEFT JOIN b2b_listing AS bl ON bl.listing_id = l.listing_id
+         LEFT JOIN b2c_listing AS bc ON bc.listing_id = l.listing_id
+         WHERE l.listing_id = ? AND b.supplier_id = ?"
+    );
+    $statement->execute([(int) $_GET['edit'], $supplierId]);
     $edit = $statement->fetch() ?: null;
 }
-$statement = $pdo->prepare("SELECT b.batch_id,b.material_type,b.color,b.available_quantity,b.unit_of_measure,COALESCE(SUM(CASE WHEN l.status='Active' THEN l.listed_quantity ELSE 0 END),0) allocated_quantity FROM textile_batch b LEFT JOIN listing l ON l.batch_id=b.batch_id WHERE b.supplier_id=? AND b.status='Active' GROUP BY b.batch_id,b.material_type,b.color,b.available_quantity,b.unit_of_measure ORDER BY b.entry_date DESC");
+$statement = $pdo->prepare(
+    "SELECT b.batch_id, b.material_type, b.color, b.available_quantity, b.unit_of_measure,
+            COALESCE(SUM(CASE WHEN l.status = 'Active' THEN l.listed_quantity ELSE 0 END), 0)
+                AS allocated_quantity
+     FROM textile_batch AS b
+     LEFT JOIN listing AS l ON l.batch_id = b.batch_id
+     WHERE b.supplier_id = ? AND b.status = 'Active'
+     GROUP BY b.batch_id, b.material_type, b.color, b.available_quantity, b.unit_of_measure
+     ORDER BY b.entry_date DESC"
+);
 $statement->execute([$supplierId]);
 $batches = $statement->fetchAll();
 $batchFilter = filter_input(INPUT_GET, 'batch_id', FILTER_VALIDATE_INT) ?: null;
-$channelFilter = in_array(($_GET['channel'] ?? ''), ['B2B','B2C'], true) ? $_GET['channel'] : '';
-$listingSql = "SELECT l.*,b.material_type,b.composition,b.color,b.unit_of_measure,IF(bl.listing_id IS NULL,'B2C','B2B') listing_type,bl.minimum_quantity,bl.bulk_unit_price,bc.bundle_size,bc.fixed_unit_price FROM listing l JOIN textile_batch b ON b.batch_id=l.batch_id LEFT JOIN b2b_listing bl ON bl.listing_id=l.listing_id LEFT JOIN b2c_listing bc ON bc.listing_id=l.listing_id WHERE b.supplier_id=?";
+$channelFilter = in_array(($_GET['channel'] ?? ''), ['B2B', 'B2C'], true) ? $_GET['channel'] : '';
+$listingSql = "SELECT l.*, b.material_type, b.composition, b.color, b.unit_of_measure,
+                      IF(bl.listing_id IS NULL, 'B2C', 'B2B') AS listing_type,
+                      bl.minimum_quantity, bl.bulk_unit_price, bc.bundle_size, bc.fixed_unit_price
+               FROM listing AS l
+               JOIN textile_batch AS b ON b.batch_id = l.batch_id
+               LEFT JOIN b2b_listing AS bl ON bl.listing_id = l.listing_id
+               LEFT JOIN b2c_listing AS bc ON bc.listing_id = l.listing_id
+               WHERE b.supplier_id = ?";
 $listingParams = [$supplierId];
 if ($batchFilter) {
     $listingSql .= ' AND l.batch_id=?';
@@ -128,13 +172,23 @@ if ($batchFilter) {
 $statement = $pdo->prepare($listingSql);
 $statement->execute($listingParams);
 $listings = $statement->fetchAll();
-$form = $edit ?: ['listing_id' => '','batch_id' => '','listing_type' => 'B2B','listed_quantity' => '','status' => 'Active','minimum_quantity' => '','bulk_unit_price' => '','bundle_size' => '','fixed_unit_price' => ''];
+$form = $edit ?: [
+    'listing_id' => '',
+    'batch_id' => '',
+    'listing_type' => 'B2B',
+    'listed_quantity' => '',
+    'status' => 'Active',
+    'minimum_quantity' => '',
+    'bulk_unit_price' => '',
+    'bundle_size' => '',
+    'fixed_unit_price' => '',
+];
 if (!$edit && ($_GET['prefill'] ?? '') === '1') {
     $prefillBatch = filter_input(INPUT_GET, 'batch_id', FILTER_VALIDATE_INT);
-    $prefillType = in_array(($_GET['listing_type'] ?? ''), ['B2B','B2C'], true) ? $_GET['listing_type'] : '';
+    $prefillType = in_array(($_GET['listing_type'] ?? ''), ['B2B', 'B2C'], true) ? $_GET['listing_type'] : '';
     $owned = false;
     foreach ($batches as $candidate) {
-        if ((int)$candidate['batch_id'] === $prefillBatch) {
+        if ((int) $candidate['batch_id'] === $prefillBatch) {
             $owned = true;
             break;
         }
@@ -142,19 +196,19 @@ if (!$edit && ($_GET['prefill'] ?? '') === '1') {
     if ($owned && $prefillType) {
         $form['batch_id'] = $prefillBatch;
         $form['listing_type'] = $prefillType;
-        $form['listed_quantity'] = max(0, (float)($_GET['listed_quantity'] ?? 0));
+        $form['listed_quantity'] = max(0, (float) ($_GET['listed_quantity'] ?? 0));
         if ($prefillType === 'B2B') {
-            $form['minimum_quantity'] = max(0, (float)($_GET['minimum_quantity'] ?? 0));
-            $form['bulk_unit_price'] = max(0, (float)($_GET['bulk_unit_price'] ?? 0));
+            $form['minimum_quantity'] = max(0, (float) ($_GET['minimum_quantity'] ?? 0));
+            $form['bulk_unit_price'] = max(0, (float) ($_GET['bulk_unit_price'] ?? 0));
         } else {
-            $form['bundle_size'] = max(0, (float)($_GET['bundle_size'] ?? 0));
-            $form['fixed_unit_price'] = max(0, (float)($_GET['fixed_unit_price'] ?? 0));
+            $form['bundle_size'] = max(0, (float) ($_GET['bundle_size'] ?? 0));
+            $form['fixed_unit_price'] = max(0, (float) ($_GET['fixed_unit_price'] ?? 0));
         }
         setFlash('info', 'Pricing suggestion loaded. Review it before publishing; no listing has been created yet.');
     }
 }
 $pageTitle = 'Marketplace listings';
-require __DIR__.'/../includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container">
 <div class="page-head">
@@ -183,7 +237,7 @@ require __DIR__.'/../includes/header.php';
 <?=$edit ? 'Existing channel' : 'New allocation'?>
 </div>
 <h2 class="h4 mb-0">
-<?=$edit ? 'Edit listing #'.e($edit['listing_id']) : 'Create a listing'?>
+<?=$edit ? 'Edit listing #' . e($edit['listing_id']) : 'Create a listing'?>
 </h2>
 </div>
 <?php if ($edit):?>
@@ -202,7 +256,7 @@ require __DIR__.'/../includes/header.php';
 <select class="form-select" id="batch_id" name="batch_id" required <?=$edit ? 'disabled' : ''?>>
 <option value="">Choose batch</option>
 <?php foreach ($batches as $batch):?>
-<option value="<?=e($batch['batch_id'])?>" data-material="<?=e($batch['material_type'].' · '.$batch['color'])?>" data-available="<?=e($batch['available_quantity'])?>" data-allocated="<?=e($batch['allocated_quantity'])?>" data-unit="<?=e($batch['unit_of_measure'])?>" <?=(int)$form['batch_id'] === (int)$batch['batch_id'] ? 'selected' : ''?>>Batch #<?=e($batch['batch_id'])?> · <?=e($batch['material_type'])?> · <?=e($batch['available_quantity'])?>
+<option value="<?=e($batch['batch_id'])?>" data-material="<?=e($batch['material_type'] . ' · ' . $batch['color'])?>" data-available="<?=e($batch['available_quantity'])?>" data-allocated="<?=e($batch['allocated_quantity'])?>" data-unit="<?=e($batch['unit_of_measure'])?>" <?=(int) $form['batch_id'] === (int) $batch['batch_id'] ? 'selected' : ''?>>Batch #<?=e($batch['batch_id'])?> · <?=e($batch['material_type'])?> · <?=e($batch['available_quantity'])?>
 <?=e($batch['unit_of_measure'])?> available</option>
 <?php endforeach;?>
 </select>
@@ -287,7 +341,7 @@ require __DIR__.'/../includes/header.php';
 </div>
 <div class="full d-flex gap-2">
 <button class="btn btn-primary" type="submit" data-listing-submit>
-<?=$edit ? 'Save '.e($form['listing_type']).' listing' : 'Publish B2B listing'?>
+<?=$edit ? 'Save ' . e($form['listing_type']) . ' listing' : 'Publish B2B listing'?>
 </button>
 <?php if ($edit):?>
 <a class="btn btn-outline-secondary" href="<?=e(url('supplier/listings.php'))?>">Cancel</a>
@@ -313,7 +367,7 @@ require __DIR__.'/../includes/header.php';
 <select class="form-select" id="filter_batch" name="batch_id">
 <option value="">All batches</option>
 <?php foreach ($batches as $batch):?>
-<option value="<?=e($batch['batch_id'])?>" <?=$batchFilter === (int)$batch['batch_id'] ? 'selected' : ''?>>Batch #<?=e($batch['batch_id'])?> · <?=e($batch['material_type'])?>
+<option value="<?=e($batch['batch_id'])?>" <?=$batchFilter === (int) $batch['batch_id'] ? 'selected' : ''?>>Batch #<?=e($batch['batch_id'])?> · <?=e($batch['material_type'])?>
 </option>
 <?php endforeach;?>
 </select>
@@ -378,9 +432,9 @@ require __DIR__.'/../includes/header.php';
 <?=e($listing['unit_of_measure'])?>
 </td>
 <td data-label="Channel terms">
-<?=$listing['listing_type'] === 'B2B' ? 'Minimum '.e($listing['minimum_quantity']).' '.e($listing['unit_of_measure']).'<br>
-<small class="muted">Wholesale '.e(money($listing['bulk_unit_price'])).' per unit</small>' : 'Bundle '.e($listing['bundle_size']).' '.e($listing['unit_of_measure']).'<br>
-<small class="muted">Retail '.e(money($listing['fixed_unit_price'])).' per unit</small>'?>
+<?=$listing['listing_type'] === 'B2B' ? 'Minimum ' . e($listing['minimum_quantity']) . ' ' . e($listing['unit_of_measure']) . '<br>
+<small class="muted">Wholesale ' . e(money($listing['bulk_unit_price'])) . ' per unit</small>' : 'Bundle ' . e($listing['bundle_size']) . ' ' . e($listing['unit_of_measure']) . '<br>
+<small class="muted">Retail ' . e(money($listing['fixed_unit_price'])) . ' per unit</small>'?>
 </td>
 <td data-label="Status">
 <span class="<?=e(statusClass($listing['status']))?>">
@@ -412,4 +466,4 @@ require __DIR__.'/../includes/header.php';
 </div>
 </section>
 </main>
-<?php require __DIR__.'/../includes/footer.php';?>
+<?php require __DIR__ . '/../includes/footer.php';?>

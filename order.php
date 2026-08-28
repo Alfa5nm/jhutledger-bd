@@ -55,7 +55,7 @@ require __DIR__ . '/includes/header.php';
 <span>The complete quantity was restored to stock<?= $order['payment_status'] === 'Refunded' ? ' and the paid payment was refunded' : '' ?>.</span>
 </div>
 <?php endif; ?>
-<?php if (in_array(currentUser()['role'], ['b2b','b2c'], true) && in_array($order['order_status'], ['Confirmed','Processing'], true) && (!$order['payment_status'] || $order['payment_status'] === 'Failed')): ?>
+<?php if (in_array(currentUser()['role'], ['b2b', 'b2c'], true) && in_array($order['order_status'], ['Confirmed', 'Processing'], true) && (!$order['payment_status'] || $order['payment_status'] === 'Failed')): ?>
 <div class="attention-banner">
 <strong>Payment needs attention</strong>
 <span>Submit the simulated payment so the administrator can verify it.</span>

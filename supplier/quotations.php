@@ -1,8 +1,8 @@
 <?php
-require __DIR__.'/../includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 requireRole('supplier');
 $pdo = db();
-$supplierId = (int)currentUser()['user_id'];
+$supplierId = (int) currentUser()['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
     $action = input('action');
@@ -15,17 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $orderId = acceptQuotation($pdo, $quotationId, 'supplier', $supplierId);
             setFlash('success', "Quotation accepted. Order #{$orderId} confirmed and stock reserved.");
         } elseif ($action === 'counter') {
-            $price = (float)input('counter_price');
+            $price = (float) input('counter_price');
             if ($price < 0) {
                 throw new RuntimeException('Counter price cannot be negative.');
             }$statement = $pdo->prepare("UPDATE quotation q JOIN listing l ON l.listing_id=q.listing_id JOIN textile_batch b ON b.batch_id=l.batch_id SET q.counter_price=?,q.status='Countered' WHERE q.quotation_id=? AND b.supplier_id=? AND q.status='Pending'");
-            $statement->execute([$price,$quotationId,$supplierId]);
+            $statement->execute([$price, $quotationId, $supplierId]);
             if (!$statement->rowCount()) {
                 throw new RuntimeException('Quotation cannot be countered.');
             }setFlash('success', 'Counter-offer sent to the buyer.');
         } elseif ($action === 'reject') {
             $statement = $pdo->prepare("UPDATE quotation q JOIN listing l ON l.listing_id=q.listing_id JOIN textile_batch b ON b.batch_id=l.batch_id SET q.status='Rejected' WHERE q.quotation_id=? AND b.supplier_id=? AND q.status IN('Pending','Countered')");
-            $statement->execute([$quotationId,$supplierId]);
+            $statement->execute([$quotationId, $supplierId]);
             if (!$statement->rowCount()) {
                 throw new RuntimeException('Quotation cannot be rejected.');
             }setFlash('success', 'Quotation rejected.');
@@ -41,7 +41,7 @@ $statement = $pdo->prepare("SELECT q.*,b.material_type,b.color,b.unit_of_measure
 $statement->execute([$supplierId]);
 $quotations = $statement->fetchAll();
 $pageTitle = 'Buyer quotations';
-require __DIR__.'/../includes/header.php';?>
+require __DIR__ . '/../includes/header.php';?>
 <main class="container">
 <div class="page-head">
 <div>
@@ -136,4 +136,4 @@ require __DIR__.'/../includes/header.php';?>
 </div>
 </section>
 </main>
-<?php require __DIR__.'/../includes/footer.php';?>
+<?php require __DIR__ . '/../includes/footer.php';?>

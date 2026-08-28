@@ -202,7 +202,7 @@ require __DIR__ . '/header.php';
 <?php foreach ($report['orders'] as $row): ?>
 <tr>
 <td>
-<a href="<?=e(url('order.php?id='.$row['order_id']))?>">#<?= e($row['order_id']) ?>
+<a href="<?=e(url('order.php?id=' . $row['order_id']))?>">#<?= e($row['order_id']) ?>
 </a>
 <br>
 <small class="muted">
@@ -230,7 +230,7 @@ require __DIR__ . '/header.php';
 </span>
 </td>
 <td>
-<a href="<?=e(url('invoice.php?id='.$row['order_id']))?>">Print invoice</a>
+<a href="<?=e(url('invoice.php?id=' . $row['order_id']))?>">Print invoice</a>
 </td>
 </tr>
 <?php endforeach; ?>

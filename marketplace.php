@@ -1,13 +1,13 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
-requireRole(['b2b','b2c']);
+requireRole(['b2b', 'b2c']);
 $pdo = db();
 $role = currentUser()['role'];
 $type = $role === 'b2b' ? 'B2B' : 'B2C';
-$search = trim((string)($_GET['q'] ?? ''));
-$material = trim((string)($_GET['material'] ?? ''));
-$district = trim((string)($_GET['district'] ?? ''));
-$maxPrice = (string)($_GET['max_price'] ?? '');
+$search = trim((string) ($_GET['q'] ?? ''));
+$material = trim((string) ($_GET['material'] ?? ''));
+$district = trim((string) ($_GET['district'] ?? ''));
+$maxPrice = (string) ($_GET['max_price'] ?? '');
 $subtable = $type === 'B2B' ? 'b2b_listing' : 'b2c_listing';
 $priceField = $type === 'B2B' ? 'x.bulk_unit_price' : 'x.fixed_unit_price';
 $sql = "SELECT l.listing_id,l.batch_id,l.listed_quantity,b.material_type,b.composition,b.color,b.gsm,b.`condition`,b.available_quantity,b.unit_of_measure,b.storage_location,u.name supplier_name,u.district,
@@ -17,7 +17,7 @@ $sql = "SELECT l.listing_id,l.batch_id,l.listed_quantity,b.material_type,b.compo
 $params = [];
 if ($search !== '') {
     $sql .= ' AND (b.material_type LIKE ? OR b.composition LIKE ? OR b.color LIKE ? OR u.name LIKE ?)';
-    $like = '%'.$search.'%';
+    $like = '%' . $search . '%';
     array_push($params, $like, $like, $like, $like);
 }
 if ($material !== '') {
@@ -30,7 +30,7 @@ if ($district !== '') {
 }
 if ($maxPrice !== '' && is_numeric($maxPrice)) {
     $sql .= " AND {$priceField}<=?";
-    $params[] = (float)$maxPrice;
+    $params[] = (float) $maxPrice;
 }
 $sql .= ' ORDER BY l.created_at DESC';
 $statement = $pdo->prepare($sql);
@@ -38,8 +38,8 @@ $statement->execute($params);
 $listings = $statement->fetchAll();
 $materials = $pdo->query("SELECT DISTINCT material_type FROM textile_batch WHERE status='Active' ORDER BY material_type")->fetchAll(PDO::FETCH_COLUMN);
 $districts = $pdo->query("SELECT DISTINCT u.district FROM users u JOIN supplier s ON s.user_id=u.user_id ORDER BY u.district")->fetchAll(PDO::FETCH_COLUMN);
-$pageTitle = $type.' marketplace';
-require __DIR__.'/includes/header.php';
+$pageTitle = $type . ' marketplace';
+require __DIR__ . '/includes/header.php';
 ?>
 <main class="container">
 <div class="page-head">
@@ -95,7 +95,7 @@ require __DIR__.'/includes/header.php';
 </form>
 </section>
 <div class="listing-grid">
-<?php foreach ($listings as $listing):$available = min((float)$listing['listed_quantity'], (float)$listing['available_quantity']);
+<?php foreach ($listings as $listing):$available = min((float) $listing['listed_quantity'], (float) $listing['available_quantity']);
     $image = textileImage($listing['material_type'], $listing['composition']);?>
 <article class="listing-card">
 <figure class="listing-image">
@@ -192,4 +192,4 @@ require __DIR__.'/includes/header.php';
 <?php endif;?>
 </div>
 </main>
-<?php require __DIR__.'/includes/footer.php';?>
+<?php require __DIR__ . '/includes/footer.php';?>

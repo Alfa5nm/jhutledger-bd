@@ -123,8 +123,8 @@ require __DIR__ . '/../includes/header.php';
 </td>
 <td data-label="Actions">
 <div class="action-row">
-<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$order['order_id']))?>">Details</a>
-<a class="btn btn-sm btn-outline-primary" href="<?=e(url('invoice.php?id='.$order['order_id']))?>">Invoice</a>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id=' . $order['order_id']))?>">Details</a>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('invoice.php?id=' . $order['order_id']))?>">Invoice</a>
 <?php if ($order['order_status'] === 'Confirmed'): ?>
 <form method="post">
 <?= csrfField() ?>

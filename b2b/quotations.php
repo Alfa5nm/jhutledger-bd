@@ -1,8 +1,8 @@
 <?php
-require __DIR__.'/../includes/bootstrap.php';
+require __DIR__ . '/../includes/bootstrap.php';
 requireRole('b2b');
 $pdo = db();
-$buyerId = (int)currentUser()['user_id'];
+$buyerId = (int) currentUser()['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
     $action = input('action');
@@ -10,23 +10,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'create') {
             $listingId = filter_input(INPUT_POST, 'listing_id', FILTER_VALIDATE_INT);
-            $quantity = (float)input('requested_quantity');
-            $price = (float)input('proposed_price');
+            $quantity = (float) input('requested_quantity');
+            $price = (float) input('proposed_price');
             $expiry = input('expiry_date');
             if (!$listingId || $quantity <= 0 || $price < 0 || !validDate($expiry) || $expiry < date('Y-m-d')) {
                 throw new RuntimeException('Enter valid quotation terms.');
             }
             $pdo->beginTransaction();
             $listing = lockListing($pdo, $listingId, 'B2B');
-            if ($listing['listing_status'] !== 'Active' || $listing['batch_status'] !== 'Active' || $quantity < (float)$listing['minimum_quantity'] || $quantity > reservableQuantity($listing)) {
+            if ($listing['listing_status'] !== 'Active' || $listing['batch_status'] !== 'Active' || $quantity < (float) $listing['minimum_quantity'] || $quantity > reservableQuantity($listing)) {
                 throw new RuntimeException('Requested quantity is outside the available wholesale range.');
             }
             $statement = $pdo->prepare("SELECT COUNT(*) FROM quotation WHERE buyer_id=? AND listing_id=? AND status IN('Pending','Countered')");
-            $statement->execute([$buyerId,$listingId]);
+            $statement->execute([$buyerId, $listingId]);
             if ($statement->fetchColumn()) {
                 throw new RuntimeException('You already have an open quotation for this listing.');
             }
-            $pdo->prepare('INSERT INTO quotation(buyer_id,listing_id,requested_quantity,proposed_price,expiry_date) VALUES(?,?,?,?,?)')->execute([$buyerId,$listingId,$quantity,$price,$expiry]);
+            $pdo->prepare('INSERT INTO quotation(buyer_id,listing_id,requested_quantity,proposed_price,expiry_date) VALUES(?,?,?,?,?)')->execute([$buyerId, $listingId, $quantity, $price, $expiry]);
             $pdo->commit();
             setFlash('success', 'Quotation request sent to the supplier.');
         } elseif ($action === 'accept' && $quotationId) {
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('success', "Counter-offer accepted. Order #{$orderId} was confirmed and stock reserved.");
         } elseif ($action === 'cancel' && $quotationId) {
             $statement = $pdo->prepare("UPDATE quotation SET status='Cancelled' WHERE quotation_id=? AND buyer_id=? AND status IN('Pending','Countered')");
-            $statement->execute([$quotationId,$buyerId]);
+            $statement->execute([$quotationId, $buyerId]);
             if (!$statement->rowCount()) {
                 throw new RuntimeException('Quotation cannot be cancelled.');
             }setFlash('success', 'Quotation cancelled.');
@@ -55,7 +55,7 @@ $statement = $pdo->prepare("SELECT q.*,b.material_type,b.color,b.unit_of_measure
 $statement->execute([$buyerId]);
 $quotations = $statement->fetchAll();
 $pageTitle = 'My quotations';
-require __DIR__.'/../includes/header.php';?>
+require __DIR__ . '/../includes/header.php';?>
 <main class="container">
 <div class="page-head">
 <div>
@@ -141,4 +141,4 @@ require __DIR__.'/../includes/header.php';?>
 </div>
 </section>
 </main>
-<?php require __DIR__.'/../includes/footer.php';?>
+<?php require __DIR__ . '/../includes/footer.php';?>

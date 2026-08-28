@@ -50,9 +50,9 @@ require __DIR__ . '/../includes/header.php';
 </small>
 </div>
 <div class="action-row">
-<a href="<?=e(url('order.php?id='.$row['order_id']))?>">Order #<?=e($row['order_id'])?>
+<a href="<?=e(url('order.php?id=' . $row['order_id']))?>">Order #<?=e($row['order_id'])?>
 </a>
-<a class="btn btn-sm btn-primary" href="<?=e(url('admin/payments.php?q='.$row['order_id']))?>">Review</a>
+<a class="btn btn-sm btn-primary" href="<?=e(url('admin/payments.php?q=' . $row['order_id']))?>">Review</a>
 </div>
 </article>
 <?php endforeach;?>
@@ -74,7 +74,7 @@ require __DIR__ . '/../includes/header.php';
 <?=e($row['buyer_name'])?> · waiting since <?=e(date('d M Y', strtotime($row['order_date'])))?>
 </small>
 </div>
-<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$row['order_id']))?>">View order</a>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id=' . $row['order_id']))?>">View order</a>
 </article>
 <?php endforeach;?>
 <?php if (!$overdue):?>
@@ -105,7 +105,7 @@ require __DIR__ . '/../includes/header.php';
 <section class="panel" id="low-stock-batches">
 <h2 class="h4">Low-stock batches</h2>
 <div class="queue-list">
-<?php foreach ($lowStock as $row):$percent = (float)$row['total_quantity'] > 0 ? round((float)$row['available_quantity'] / (float)$row['total_quantity'] * 100) : 0;?>
+<?php foreach ($lowStock as $row):$percent = (float) $row['total_quantity'] > 0 ? round((float) $row['available_quantity'] / (float) $row['total_quantity'] * 100) : 0;?>
 <article>
 <div>
 <span class="badge-warning">
@@ -159,7 +159,7 @@ require __DIR__ . '/../includes/header.php';
 <?=e($row['email'])?> · <?=e($row['order_status'])?>
 </small>
 </div>
-<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$row['order_id']))?>">View order</a>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id=' . $row['order_id']))?>">View order</a>
 </article>
 <?php endforeach;?>
 <?php if (!$inactiveOpen):?>

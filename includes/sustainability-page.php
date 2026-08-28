@@ -12,13 +12,13 @@ if (($_GET['export'] ?? '') === 'csv') {
     fwrite($output, "\xEF\xBB\xBF");
     fputcsv($output, ['Unit', 'Recirculated quantity', 'Returned quantity', 'Net retained quantity', 'Recovered material value (BDT)', 'Retention %', 'Orders']);
     foreach ($report['units'] as $row) {
-        fputcsv($output, [$row['unit_of_measure'],$row['recirculated_quantity'],$row['returned_quantity'],$row['net_quantity'],$row['recovered_value'],$row['utilization_percentage'],$row['order_count']]);
+        fputcsv($output, [$row['unit_of_measure'], $row['recirculated_quantity'], $row['returned_quantity'], $row['net_quantity'], $row['recovered_value'], $row['utilization_percentage'], $row['order_count']]);
     }
     fputcsv($output, []);
     fputcsv($output, ['Material', 'Unit', 'Recirculated', 'Returned', 'Net retained', 'Recovered value']);
     foreach ($report['materials'] as $row) {
-        $label = preg_match('/^[=+\-@]/', $row['label']) ? "'".$row['label'] : $row['label'];
-        fputcsv($output, [$label,$row['unit_of_measure'],$row['recirculated_quantity'],$row['returned_quantity'],$row['net_quantity'],$row['recovered_value']]);
+        $label = preg_match('/^[=+\-@]/', $row['label']) ? "'" . $row['label'] : $row['label'];
+        fputcsv($output, [$label, $row['unit_of_measure'], $row['recirculated_quantity'], $row['returned_quantity'], $row['net_quantity'], $row['recovered_value']]);
     }
     fclose($output);
     exit;
@@ -60,7 +60,7 @@ require __DIR__ . '/header.php';
 <label class="form-label">Condition</label>
 <select class="form-select" name="condition">
 <option value="">All conditions</option>
-<?php foreach (['New','Surplus','Dead Stock','Recycled'] as $value): ?>
+<?php foreach (['New', 'Surplus', 'Dead Stock', 'Recycled'] as $value): ?>
 <option <?= $filters['condition'] === $value ? 'selected' : '' ?>>
 <?= e($value) ?>
 </option>
@@ -75,7 +75,7 @@ require __DIR__ . '/header.php';
 <label class="form-label">Unit</label>
 <select class="form-select" name="unit">
 <option value="">All, kept separate</option>
-<?php foreach (['kg','metre','piece'] as $value): ?>
+<?php foreach (['kg', 'metre', 'piece'] as $value): ?>
 <option <?= $filters['unit'] === $value ? 'selected' : '' ?>>
 <?= e($value) ?>
 </option>
@@ -113,13 +113,13 @@ require __DIR__ . '/header.php';
 </strong>
 </td>
 <td data-label="Recirculated">
-<?= e(number_format((float)$row['recirculated_quantity'], 2)) ?>
+<?= e(number_format((float) $row['recirculated_quantity'], 2)) ?>
 </td>
 <td data-label="Returned">
-<?= e(number_format((float)$row['returned_quantity'], 2)) ?>
+<?= e(number_format((float) $row['returned_quantity'], 2)) ?>
 </td>
 <td data-label="Net retained">
-<?= e(number_format((float)$row['net_quantity'], 2)) ?>
+<?= e(number_format((float) $row['net_quantity'], 2)) ?>
 </td>
 <td data-label="Recovered value">
 <?= e(money($row['recovered_value'])) ?>
@@ -140,7 +140,7 @@ require __DIR__ . '/header.php';
 </table>
 </div>
 </section>
-<?php foreach (['conditions' => 'Condition performance','materials' => 'Material recovery','channels' => 'B2B / B2C contribution'] as $key => $heading): ?>
+<?php foreach (['conditions' => 'Condition performance', 'materials' => 'Material recovery', 'channels' => 'B2B / B2C contribution'] as $key => $heading): ?>
 <section class="panel">
 <h2 class="h4">
 <?= e($heading) ?>
@@ -171,13 +171,13 @@ require __DIR__ . '/header.php';
 <?= e($row['unit_of_measure']) ?>
 </td>
 <td data-label="Recirculated">
-<?= e(number_format((float)$row['recirculated_quantity'], 2)) ?>
+<?= e(number_format((float) $row['recirculated_quantity'], 2)) ?>
 </td>
 <td data-label="Returned">
-<?= e(number_format((float)$row['returned_quantity'], 2)) ?>
+<?= e(number_format((float) $row['returned_quantity'], 2)) ?>
 </td>
 <td data-label="Net retained">
-<?= e(number_format((float)$row['net_quantity'], 2)) ?>
+<?= e(number_format((float) $row['net_quantity'], 2)) ?>
 </td>
 <td data-label="Recovered value">
 <?= e(money($row['recovered_value'])) ?>

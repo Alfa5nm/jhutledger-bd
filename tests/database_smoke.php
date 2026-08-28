@@ -6,7 +6,7 @@ require __DIR__ . '/../config/database.php';
 require __DIR__ . '/../includes/functions.php';
 require __DIR__ . '/../includes/marketplace.php';
 
-$expected = ['users','supplier','b2b_buyer','b2c_buyer','textile_batch','listing','b2b_listing','b2c_listing','quotation','orders','order_item','payment','stock_transaction'];
+$expected = ['users', 'supplier', 'b2b_buyer', 'b2c_buyer', 'textile_batch', 'listing', 'b2b_listing', 'b2c_listing', 'quotation', 'orders', 'order_item', 'payment', 'stock_transaction'];
 $pdo = db();
 $database = $pdo->query('SELECT DATABASE()')->fetchColumn();
 $statement = $pdo->prepare('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?');
@@ -121,7 +121,7 @@ $pdo->rollBack();
 $afterStock = (float) $pdo->query('SELECT available_quantity FROM textile_batch WHERE batch_id=2')->fetchColumn();
 $statement = $pdo->prepare('SELECT COUNT(*) FROM orders WHERE order_id=?');
 $statement->execute([$testOrderId]);
-if (abs($afterStock - $beforeStock) > 0.0001 || (int)$statement->fetchColumn() !== 0) {
+if (abs($afterStock - $beforeStock) > 0.0001 || (int) $statement->fetchColumn() !== 0) {
     throw new RuntimeException('Marketplace transaction rollback failed.');
 }
 $pdo->beginTransaction();
@@ -264,11 +264,11 @@ try {
 if (!$invalidMarginBlocked) {
     throw new RuntimeException('Invalid pricing margin was not blocked.');
 }
-$sustainabilityFilters = ['date_from' => '','date_to' => '','channel' => '','condition' => '','material' => '','unit' => ''];
+$sustainabilityFilters = ['date_from' => '', 'date_to' => '', 'channel' => '', 'condition' => '', 'material' => '', 'unit' => ''];
 $adminSustainability = sustainabilityReport($pdo, null, $sustainabilityFilters);
 $supplierSustainability = sustainabilityReport($pdo, 2, $sustainabilityFilters);
-$adminRecovered = array_sum(array_map(fn ($row) => (float)$row['recovered_value'], $adminSustainability['units']));
-$supplierRecovered = array_sum(array_map(fn ($row) => (float)$row['recovered_value'], $supplierSustainability['units']));
+$adminRecovered = array_sum(array_map(fn ($row) => (float) $row['recovered_value'], $adminSustainability['units']));
+$supplierRecovered = array_sum(array_map(fn ($row) => (float) $row['recovered_value'], $supplierSustainability['units']));
 if ($supplierRecovered > $adminRecovered + 0.0001) {
     throw new RuntimeException('Sustainability supplier scoping failed.');
 }

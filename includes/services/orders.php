@@ -69,6 +69,7 @@ function advanceOrderStatus(PDO $pdo, int $orderId, int $supplierId, string $tar
         }
 
         if ($targetStatus === "Completed") {
+            // Stock was removed when the order was reserved. SOLD records completion without deducting it again.
             $statement = $pdo->prepare(
                 "INSERT INTO stock_transaction (batch_id, order_id, quantity, transaction_type, remarks)
                  SELECT ?, ?, ?, 'SOLD', ?
@@ -154,6 +155,7 @@ function returnOrder(PDO $pdo, int $orderId, string $actorRole, int $actorId): v
             throw new RuntimeException("This order has already been returned.");
         }
 
+        // The existing schema has no Returned order status, so the RETURNED ledger row is the durable return marker.
         $payment = $pdo->prepare("SELECT payment_id, payment_status FROM payment WHERE order_id = ? FOR UPDATE");
         $payment->execute([$orderId]);
         $paymentRow = $payment->fetch();

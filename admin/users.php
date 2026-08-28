@@ -7,27 +7,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
     $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
     $status = input('status');
-    if (!$userId || !in_array($status, ['Active','Inactive'], true)) {
+    if (!$userId || !in_array($status, ['Active', 'Inactive'], true)) {
         setFlash('danger', 'Invalid user status request.');
-    } elseif ($userId === (int)currentUser()['user_id']) {
+    } elseif ($userId === (int) currentUser()['user_id']) {
         setFlash('warning', 'You cannot deactivate your own account.');
     } else {
         $statement = $pdo->prepare('UPDATE users SET user_status=? WHERE user_id=?');
-        $statement->execute([$status,$userId]);
+        $statement->execute([$status, $userId]);
         setFlash('success', 'User status updated. No historical record was deleted.');
     }
-    redirect('admin/users.php'.(input('return_q') !== '' ? '?q='.urlencode(input('return_q')) : ''));
+    redirect('admin/users.php' . (input('return_q') !== '' ? '?q=' . urlencode(input('return_q')) : ''));
 }
 
-$search = trim((string)($_GET['q'] ?? ''));
+$search = trim((string) ($_GET['q'] ?? ''));
 $sql = "SELECT u.user_id,u.name,u.email,u.phone,u.user_status,u.created_at,
 CASE WHEN s.user_id IS NOT NULL THEN 'Supplier' WHEN bb.user_id IS NOT NULL THEN 'B2B Buyer' WHEN bc.user_id IS NOT NULL THEN 'B2C Buyer' ELSE 'Invalid' END AS base_role
 FROM users u LEFT JOIN supplier s ON s.user_id=u.user_id LEFT JOIN b2b_buyer bb ON bb.user_id=u.user_id LEFT JOIN b2c_buyer bc ON bc.user_id=u.user_id";
 $params = [];
 if ($search !== '') {
     $sql .= ' WHERE u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?';
-    $like = '%'.$search.'%';
-    $params = [$like,$like,$like];
+    $like = '%' . $search . '%';
+    $params = [$like, $like, $like];
 }$sql .= ' ORDER BY u.created_at DESC';
 $statement = $pdo->prepare($sql);
 $statement->execute($params);
@@ -95,7 +95,7 @@ require __DIR__ . '/../includes/header.php';
 <?=e(date('d M Y', strtotime($user['created_at'])))?>
 </td>
 <td>
-<?php if ((int)$user['user_id'] === (int)currentUser()['user_id']):?>
+<?php if ((int) $user['user_id'] === (int) currentUser()['user_id']):?>
 <span class="muted small">Current account</span>
 <?php else:?>
 <form method="post">

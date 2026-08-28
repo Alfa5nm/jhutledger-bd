@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../includes/bootstrap.php';
 requireRole('admin');
-$expected = ['users','supplier','b2b_buyer','b2c_buyer','textile_batch','listing','b2b_listing','b2c_listing','quotation','orders','order_item','payment','stock_transaction'];
+$expected = ['users', 'supplier', 'b2b_buyer', 'b2c_buyer', 'textile_batch', 'listing', 'b2b_listing', 'b2c_listing', 'quotation', 'orders', 'order_item', 'payment', 'stock_transaction'];
 $healthy = false;
 $details = [];
 $recent = [];

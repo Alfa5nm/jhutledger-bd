@@ -105,14 +105,14 @@ require __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 </td>
 <td>
-<a href="<?=e(url('order.php?id='.$payment['order_id']))?>">#<?= e($payment['order_id']) ?>
+<a href="<?=e(url('order.php?id=' . $payment['order_id']))?>">#<?= e($payment['order_id']) ?>
 </a>
 <br>
 <small class="muted">
 <?= e($payment['order_type']) ?> · <?= e($payment['order_status']) ?>
 </small>
 <br>
-<a href="<?=e(url('invoice.php?id='.$payment['order_id']))?>">Print invoice</a>
+<a href="<?=e(url('invoice.php?id=' . $payment['order_id']))?>">Print invoice</a>
 </td>
 <td>
 <?= e($payment['buyer_name']) ?>

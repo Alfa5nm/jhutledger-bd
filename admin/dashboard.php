@@ -2,7 +2,7 @@
 require __DIR__ . '/../includes/bootstrap.php';
 requireRole('admin');
 $pdo = db();
-$queries = ['Total users' => 'SELECT COUNT(*) FROM users','Pending payments' => 'SELECT COUNT(*) FROM payment WHERE payment_status=\'Pending\'','Completed orders' => 'SELECT COUNT(*) FROM orders WHERE order_status=\'Completed\'','Revenue' => 'SELECT COALESCE(SUM(total_amount),0) FROM orders WHERE order_status=\'Completed\''];
+$queries = ['Total users' => 'SELECT COUNT(*) FROM users', 'Pending payments' => 'SELECT COUNT(*) FROM payment WHERE payment_status=\'Pending\'', 'Completed orders' => 'SELECT COUNT(*) FROM orders WHERE order_status=\'Completed\'', 'Revenue' => 'SELECT COALESCE(SUM(total_amount),0) FROM orders WHERE order_status=\'Completed\''];
 $stats = [];
 foreach ($queries as $label => $sql) {
     $stats[$label] = $pdo->query($sql)->fetchColumn();

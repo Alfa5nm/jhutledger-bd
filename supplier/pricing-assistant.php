@@ -92,7 +92,7 @@ require __DIR__ . '/../includes/header.php';
 <select class="form-select" name="batch_id" id="batch_id" required>
 <option value="">Choose batch</option>
 <?php foreach ($batches as $row): ?>
-<option value="<?= e($row['batch_id']) ?>" <?= (int)$form['batch_id'] === (int)$row['batch_id'] ? 'selected' : '' ?>>Batch #<?= e($row['batch_id']) ?> · <?= e($row['material_type']) ?> · cost <?= e(money($row['average_cost'])) ?> · <?= e($row['available_quantity']) ?>
+<option value="<?= e($row['batch_id']) ?>" <?= (int) $form['batch_id'] === (int) $row['batch_id'] ? 'selected' : '' ?>>Batch #<?= e($row['batch_id']) ?> · <?= e($row['material_type']) ?> · cost <?= e(money($row['average_cost'])) ?> · <?= e($row['available_quantity']) ?>
 <?= e($row['unit_of_measure']) ?> available</option>
 <?php endforeach; ?>
 </select>

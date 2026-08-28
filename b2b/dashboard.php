@@ -17,10 +17,10 @@ foreach ($queries as $label => [$sql,$params]) {
 }
 $statement = $pdo->prepare("SELECT COUNT(*) FROM quotation WHERE buyer_id=? AND status='Countered'");
 $statement->execute([$userId]);
-$counterOffers = (int)$statement->fetchColumn();
+$counterOffers = (int) $statement->fetchColumn();
 $statement = $pdo->prepare("SELECT COUNT(*) FROM orders o LEFT JOIN payment p ON p.order_id=o.order_id WHERE o.buyer_id=? AND o.order_status IN ('Confirmed','Processing') AND (p.payment_id IS NULL OR p.payment_status IN ('Failed','Pending'))");
 $statement->execute([$userId]);
-$paymentAttention = (int)$statement->fetchColumn();
+$paymentAttention = (int) $statement->fetchColumn();
 $pageTitle = 'B2B buyer dashboard';
 require __DIR__ . '/../includes/header.php';
 ?>

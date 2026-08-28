@@ -137,8 +137,8 @@ require __DIR__ . '/header.php';
 </td>
 <td data-label="Actions">
 <div class="action-row">
-<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id='.$order['order_id']))?>">View details</a>
-<a class="btn btn-sm btn-outline-primary" href="<?=e(url('invoice.php?id='.$order['order_id']))?>">Print invoice</a>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('order.php?id=' . $order['order_id']))?>">View details</a>
+<a class="btn btn-sm btn-outline-primary" href="<?=e(url('invoice.php?id=' . $order['order_id']))?>">Print invoice</a>
 <?php if (in_array($order['order_status'], ['Confirmed', 'Processing'], true) && (!$order['payment_status'] || $order['payment_status'] === 'Failed')): ?>
 <a class="btn btn-sm btn-primary" href="<?= e(url('payment.php?order_id=' . $order['order_id'])) ?>">
 <?= $order['payment_status'] === 'Failed' ? 'Retry payment' : 'Pay' ?>

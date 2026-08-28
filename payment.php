@@ -121,8 +121,8 @@ require __DIR__ . '/includes/header.php';
 <div class="alert alert-info mt-4 mb-0">This order does not currently accept another payment submission.</div>
 <?php endif; ?>
 <div class="action-row mt-3">
-<a class="btn btn-outline-primary" href="<?=e(url('order.php?id='.$orderId))?>">View order details</a>
-<a class="btn btn-outline-primary" href="<?=e(url('invoice.php?id='.$orderId))?>">Print invoice</a>
+<a class="btn btn-outline-primary" href="<?=e(url('order.php?id=' . $orderId))?>">View order details</a>
+<a class="btn btn-outline-primary" href="<?=e(url('invoice.php?id=' . $orderId))?>">Print invoice</a>
 </div>
 </section>
 </main>
