@@ -151,6 +151,13 @@ h1 { font-weight: 700; letter-spacing: -.045em; }
 .filter-action { display: flex; align-items: center; gap: .7rem; white-space: nowrap; }
 .listing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 .listing-card { padding: 1.4rem; background: var(--white); border: 1px solid var(--ink); box-shadow: 7px 7px 0 rgba(32,34,29,.07); }
+.listing-image { position: relative; margin: -1.4rem -1.4rem 1.2rem; overflow: hidden; background: #ded8ca; border-bottom: 1px solid var(--ink); aspect-ratio: 3 / 2; }
+.listing-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.listing-image figcaption { position: absolute; right: .65rem; bottom: .65rem; padding: .35rem .55rem; color: var(--ink); background: rgba(250,247,240,.92); border: 1px solid rgba(32,34,29,.3); font-size: .65rem; font-weight: 750; letter-spacing: .03em; }
+.material-cell { display: flex; align-items: center; gap: .75rem; min-width: 220px; }
+.material-cell span, .material-cell small { display: block; }
+.textile-thumb { flex: 0 0 72px; width: 72px; height: 52px; object-fit: cover; background: #ded8ca; border: 1px solid var(--line); }
+.representative-label { margin-top: .2rem; color: var(--rust); font-size: .6rem; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
 .listing-top { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
 .listing-top h2 { margin: .35rem 0 .25rem; font-size: 1.65rem; }
 .listing-top p { margin: 0; color: var(--muted); font-size: .84rem; }
@@ -198,6 +205,9 @@ h1 { font-weight: 700; letter-spacing: -.045em; }
 .order-timeline small { margin-top: .2rem; color: var(--muted); }
 .order-timeline .is-complete { opacity: 1; }
 .order-timeline .is-complete > span { color: white; background: var(--sage); border-color: var(--sage); }
+.order-material-image { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; margin: 0 0 1.5rem; overflow: hidden; background: var(--white); border: 1px solid var(--ink); }
+.order-material-image img { display: block; grid-column: 1 / -1; width: 100%; height: clamp(210px, 30vw, 390px); object-fit: cover; }
+.order-material-image figcaption { grid-column: 1 / -1; padding: .65rem .85rem; color: var(--muted); background: var(--paper-light); border-top: 1px solid var(--line); font-size: .72rem; }
 .order-timeline .is-current { box-shadow: inset 0 -4px var(--rust); }
 .detail-layout { display: grid; grid-template-columns: 1.4fr .7fr; gap: 1.25rem; }
 .party-card { display: grid; gap: .25rem; padding: 1rem 0; border-bottom: 1px solid var(--line); }

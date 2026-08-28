@@ -19,6 +19,33 @@ function url(string $path = ''): string
     return $base . ($path === '' ? '' : '/' . ltrim($path, '/'));
 }
 
+function textileImage(string $materialType, string $composition = ''): array
+{
+    $searchable = strtolower(trim($materialType . ' ' . $composition));
+    $matches = static function (array $keywords) use ($searchable): bool {
+        foreach ($keywords as $keyword) {
+            if (str_contains($searchable, $keyword)) return true;
+        }
+        return false;
+    };
+
+    [$category, $filename, $description] = match (true) {
+        $matches(['recycled', 'reclaimed', 'upcycled']) => ['Recycled textile', 'recycled.webp', 'Representative recycled textile bundles'],
+        $matches(['denim', 'jean']) => ['Denim', 'denim.webp', 'Representative indigo denim fabric rolls'],
+        $matches(['jute', 'burlap', 'hessian']) => ['Jute', 'jute.webp', 'Representative natural jute fabric rolls'],
+        $matches(['cotton', 'knit', 'jersey', 'fleece']) => ['Cotton and knit', 'cotton-knit.webp', 'Representative cotton and knit fabric'],
+        $matches(['nylon', 'polyester', 'synthetic', 'elastane', 'spandex', 'acrylic']) => ['Synthetic textile', 'nylon-synthetic.webp', 'Representative synthetic fabric rolls'],
+        $matches(['mixed', 'blend', 'assorted']) => ['Mixed fabric', 'mixed-fabric.webp', 'Representative mixed textile selection'],
+        default => ['Textile stock', 'textile-default.webp', 'Representative neutral textile stock'],
+    };
+
+    return [
+        'src' => url('assets/images/textiles/' . $filename),
+        'category' => $category,
+        'alt' => $description . ' for ' . ($materialType !== '' ? $materialType : 'this material'),
+    ];
+}
+
 function redirect(string $path): never
 {
     header('Location: ' . (str_starts_with($path, '/') ? $path : url($path)));

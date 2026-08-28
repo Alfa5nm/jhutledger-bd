@@ -12,6 +12,7 @@ $ledger = $statement->fetchAll();
 $stages = ['Confirmed', 'Processing', 'Completed'];
 $stageIndex = match ($order['order_status']) { 'Processing' => 1, 'Completed' => 2, default => 0 };
 $displayStatus = displayOrderStatus($order);
+$orderImage = textileImage($order['material_type'], $order['composition']);
 $pageTitle = "Order #{$orderId}";
 require __DIR__ . '/includes/header.php';
 ?>
@@ -27,6 +28,8 @@ require __DIR__ . '/includes/header.php';
     <ol class="order-timeline" aria-label="Order progress">
         <?php foreach ($stages as $index => $stage): $done = $order['order_status'] !== 'Cancelled' && $stageIndex >= $index; ?><li class="<?= $done ? 'is-complete' : '' ?> <?= $order['order_status'] === $stage ? 'is-current' : '' ?>" <?= $order['order_status'] === $stage ? 'aria-current="step"' : '' ?>><span><?= e($index + 1) ?></span><div><strong><?= e($stage) ?></strong><small><?= e(match ($stage) { 'Confirmed' => 'Stock reserved and order accepted', 'Processing' => 'Supplier is preparing the order', default => 'Sale completed and recorded' }) ?></small></div></li><?php endforeach; ?>
     </ol>
+
+    <figure class="order-material-image"><img src="<?= e($orderImage['src']) ?>" alt="<?= e($orderImage['alt']) ?>" width="1200" height="800" loading="lazy" decoding="async"><figcaption>Representative image · <?= e($orderImage['category']) ?>. The supplier's exact stock may vary.</figcaption></figure>
 
     <div class="detail-layout">
         <section class="panel mt-0"><h2 class="h4">Order summary</h2><dl class="detail-grid"><div><dt>Material</dt><dd><?= e($order['material_type']) ?></dd></div><div><dt>Specification</dt><dd><?= e($order['composition']) ?> · <?= e($order['color']) ?> · <?= e($order['gsm']) ?> GSM</dd></div><div><dt>Quantity</dt><dd><?= e($order['quantity']) ?> <?= e($order['unit_of_measure']) ?></dd></div><div><dt>Unit price</dt><dd><?= e(money($order['selling_price'])) ?></dd></div><div><dt>Total</dt><dd><?= e(money($order['total_amount'])) ?></dd></div><div><dt>Gross profit snapshot</dt><dd><?= currentUser()['role'] === 'supplier' || currentUser()['role'] === 'admin' ? e(money($order['gross_profit'])) : 'Restricted' ?></dd></div><div><dt>Order status</dt><dd><span class="<?= e(statusClass($displayStatus)) ?>"><?= e($displayStatus) ?></span></dd></div><div><dt>Payment</dt><dd><span class="<?= e(statusClass($order['payment_status'] ?? 'Not submitted')) ?>"><?= e($order['payment_status'] ?? 'Not submitted') ?></span><?php if ($order['payment_method']): ?> · <?= e($order['payment_method']) ?><?php endif; ?></dd></div></dl></section>

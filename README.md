@@ -4,6 +4,8 @@ A database-driven university project built with PHP 8.2, MariaDB/MySQL, PDO, HTM
 
 The 25 August expansion adds four modules without changing the schema: full-order returns with automatic mock-payment refunds, B2C reorder/B2B repeat quotation, a supplier pricing and margin assistant, and unit-safe textile-recirculation analytics with CSV export.
 
+Marketplace, Supplier inventory, and order-detail screens also use locally bundled representative textile photographs selected automatically from each batch's material and composition. These defaults require no image column, upload storage, or network access.
+
 ## Database diagrams
 
 - [Relational schema diagram](docs/schema-diagram.png)

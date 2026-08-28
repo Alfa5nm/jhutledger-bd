@@ -27,6 +27,27 @@ foreach ($users as $user) {
 $demo = $pdo->query("SELECT password_hash FROM users WHERE email='supplier@jhutledger.local'")->fetchColumn();
 if (!$demo || !password_verify('Demo@123', $demo)) throw new RuntimeException('Demo password verification failed.');
 
+$imageCases = [
+    ['DENIM Fabric', '98% Cotton', 'Denim', 'denim.webp'],
+    ['Cotton Knit', '100% Cotton', 'Cotton and knit', 'cotton-knit.webp'],
+    ['Jute cloth', 'Natural fibre', 'Jute', 'jute.webp'],
+    ['Nylon Fabric', 'Polyester blend', 'Synthetic textile', 'nylon-synthetic.webp'],
+    ['Recycled Yarn', 'Reclaimed cotton', 'Recycled textile', 'recycled.webp'],
+    ['Assorted cloth', 'Mixed blend', 'Mixed fabric', 'mixed-fabric.webp'],
+    ['Uncatalogued material', 'Unknown', 'Textile stock', 'textile-default.webp'],
+];
+foreach ($imageCases as [$material, $composition, $category, $filename]) {
+    $image = textileImage($material, $composition);
+    if ($image['category'] !== $category || basename($image['src']) !== $filename || $image['alt'] === '') {
+        throw new RuntimeException("Textile image mapping failed for {$material}.");
+    }
+    $publicPath = parse_url($image['src'], PHP_URL_PATH);
+    $relativePath = substr($publicPath, strlen((string) appConfig('base_url')));
+    if (!is_file(dirname(__DIR__) . str_replace('/', DIRECTORY_SEPARATOR, $relativePath))) {
+        throw new RuntimeException("Textile image asset is missing: {$filename}.");
+    }
+}
+
 $pdo->beginTransaction();
 $email = 'rollback-test-' . bin2hex(random_bytes(4)) . '@example.test';
 $insert = $pdo->prepare("INSERT INTO users (name,email,phone,password_hash,street,city,district,postal_code,user_status) VALUES (?,?,?,?,?,?,?,?, 'Active')");
@@ -240,3 +261,4 @@ echo "PASS: listing allocation and transactional stock reservation work.\n";
 echo "PASS: payment review, order transitions, cancellation restoration, and reports work.\n";
 echo "PASS: order detail, stock movement, and admin exception derivation work.\n";
 echo "PASS: returns, repeat purchase, pricing projections, and sustainability scoping work.\n";
+echo "PASS: context-aware textile image mappings and local assets work.\n";
