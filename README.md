@@ -64,6 +64,7 @@ Run PHP syntax and database smoke tests:
 ```powershell
 Get-ChildItem -Recurse -Filter *.php | ForEach-Object { D:\Softwares\XAMPP\php\php.exe -l $_.FullName }
 D:\Softwares\XAMPP\php\php.exe tests\database_smoke.php
+D:\Softwares\XAMPP\php\php.exe tests\readability_check.php
 ```
 
 See [docs/VIVA_CHECKLIST.md](docs/VIVA_CHECKLIST.md) for the recommended faculty demonstration.

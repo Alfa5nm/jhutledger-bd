@@ -53,129 +53,109 @@ $pageTitle = 'Stock ledger';
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container">
-<div class="page-head">
-<div>
-<div class="eyebrow">Supplier / Inventory</div>
-<h1>Stock ledger</h1>
-<p>Trace every addition, reservation, release, sale, return, and adjustment.</p>
-</div>
-<a class="btn btn-outline-primary" href="<?= e(url('supplier/batches.php')) ?>">Manage batches</a>
-</div>
-<section class="filter-bar">
-<form method="get" class="filter-grid ledger-filters">
-<div>
-<label class="form-label" for="batch_id">Batch</label>
-<select class="form-select" id="batch_id" name="batch_id">
-<option value="">All batches</option>
-<?php foreach ($batches as $batch): ?>
-<option value="<?= e($batch['batch_id']) ?>" <?= $batchId === (int) $batch['batch_id'] ? 'selected' : '' ?>>#<?= e($batch['batch_id']) ?> · <?= e($batch['material_type']) ?> · <?= e($batch['color']) ?>
-</option>
-<?php endforeach; ?>
-</select>
-</div>
-<div>
-<label class="form-label" for="type">Movement</label>
-<select class="form-select" id="type" name="type">
-<option value="">All movements</option>
-<?php foreach ($types as $item): ?>
-<option <?= $type === $item ? 'selected' : '' ?>>
-<?= e(str_replace('_', ' ', $item)) ?>
-</option>
-<?php endforeach; ?>
-</select>
-</div>
-<div>
-<label class="form-label" for="date_from">From</label>
-<input class="form-control" type="date" id="date_from" name="date_from" value="<?= e($dateFrom) ?>">
-</div>
-<div>
-<label class="form-label" for="date_to">To</label>
-<input class="form-control" type="date" id="date_to" name="date_to" value="<?= e($dateTo) ?>">
-</div>
-<div class="filter-action">
-<button class="btn btn-primary">Apply</button>
-<a href="<?= e(url('supplier/stock-ledger.php')) ?>">Clear</a>
-</div>
-</form>
-</section>
-<section class="panel mt-0">
-<div class="section-heading">
-<div>
-<h2 class="h4">Movement history</h2>
-<p class="muted mb-0">
-<?= e(count($transactions)) ?> matching ledger records</p>
-</div>
-</div>
-<div class="table-wrap">
-<table class="table align-middle responsive-table">
-<thead>
-<tr>
-<th>Date</th>
-<th>Batch</th>
-<th>Movement</th>
-<th>Quantity</th>
-<th>Order</th>
-<th>Remarks</th>
-</tr>
-</thead>
-<tbody>
-<?php foreach ($transactions as $row): $movement = stockMovement($row['transaction_type'], (float) $row['quantity']); ?>
-<tr>
-<td data-label="Date">
-<?= e(date('d M Y, H:i', strtotime($row['transaction_date']))) ?>
-</td>
-<td data-label="Batch">
-<strong>#<?= e($row['batch_id']) ?>
-</strong>
-<br>
-<small class="muted">
-<?= e($row['material_type']) ?> · <?= e($row['color']) ?>
-</small>
-</td>
-<td data-label="Movement">
-<span class="movement <?= e($movement['class']) ?>">
-<?= e(str_replace('_', ' ', $row['transaction_type'])) ?>
-</span>
-<br>
-<small class="muted">
-<?= e($movement['effect']) ?>
-</small>
-</td>
-<td data-label="Quantity">
-<strong class="<?= e($movement['class']) ?>">
-<?= e($movement['symbol']) ?>
-<?= e(number_format($movement['quantity'], 2)) ?>
-</strong>
-<?= e($row['unit_of_measure']) ?>
-<br>
-<small class="muted">
-<?= e(number_format((float) $row['available_quantity'], 2)) ?> currently available</small>
-</td>
-<td data-label="Order">
-<?php if ($row['order_id']): ?>
-<a href="<?= e(url('order.php?id=' . $row['order_id'])) ?>">#<?= e($row['order_id']) ?>
-</a>
-<br>
-<small class="muted">
-<?= e($row['order_type']) ?> · <?= e($row['order_status']) ?>
-</small>
-<?php else: ?>
-<span class="muted">Inventory</span>
-<?php endif; ?>
-</td>
-<td data-label="Remarks">
-<?= e($row['remarks'] ?: '—') ?>
-</td>
-</tr>
-<?php endforeach; ?>
+    <div class="page-head">
+        <div>
+            <div class="eyebrow">Supplier / Inventory</div>
+            <h1>Stock ledger</h1>
+            <p>Trace every addition, reservation, release, sale, return, and adjustment.</p>
+        </div>
+        <a class="btn btn-outline-primary" href="<?= e(url('supplier/batches.php')) ?>">Manage batches</a>
+    </div>
+    <section class="filter-bar">
+        <form method="get" class="filter-grid ledger-filters">
+            <div>
+                <label class="form-label" for="batch_id">Batch</label>
+                <select class="form-select" id="batch_id" name="batch_id">
+                    <option value="">All batches</option>
+                    <?php foreach ($batches as $batch): ?>
+                    <option value="<?= e($batch['batch_id']) ?>" <?= $batchId === (int) $batch['batch_id'] ? 'selected' : '' ?>>
+                        #<?= e($batch['batch_id']) ?> · <?= e($batch['material_type']) ?> · <?= e($batch['color']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="type">Movement</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">All movements</option>
+                    <?php foreach ($types as $item): ?>
+                    <option <?= $type === $item ? 'selected' : '' ?>><?= e(str_replace('_', ' ', $item)) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="date_from">From</label>
+                <input class="form-control" type="date" id="date_from" name="date_from" value="<?= e($dateFrom) ?>" />
+            </div>
+            <div>
+                <label class="form-label" for="date_to">To</label>
+                <input class="form-control" type="date" id="date_to" name="date_to" value="<?= e($dateTo) ?>" />
+            </div>
+            <div class="filter-action">
+                <button class="btn btn-primary">Apply</button>
+                <a href="<?= e(url('supplier/stock-ledger.php')) ?>">Clear</a>
+            </div>
+        </form>
+    </section>
+    <section class="panel mt-0">
+        <div class="section-heading">
+            <div>
+                <h2 class="h4">Movement history</h2>
+                <p class="muted mb-0"><?= e(count($transactions)) ?> matching ledger records</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="table align-middle responsive-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Batch</th>
+                        <th>Movement</th>
+                        <th>Quantity</th>
+                        <th>Order</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($transactions as $row): $movement = stockMovement($row['transaction_type'], (float) $row['quantity']); ?>
+                    <tr>
+                        <td data-label="Date"><?= e(date('d M Y, H:i', strtotime($row['transaction_date']))) ?></td>
+                        <td data-label="Batch">
+                            <strong>#<?= e($row['batch_id']) ?> </strong>
+                            <br />
+                            <small class="muted"> <?= e($row['material_type']) ?> · <?= e($row['color']) ?> </small>
+                        </td>
+                        <td data-label="Movement">
+                            <span class="movement <?= e($movement['class']) ?>"> <?= e(str_replace('_', ' ', $row['transaction_type'])) ?> </span>
+                            <br />
+                            <small class="muted"> <?= e($movement['effect']) ?> </small>
+                        </td>
+                        <td data-label="Quantity">
+                            <strong class="<?= e($movement['class']) ?>"> <?= e($movement['symbol']) ?> <?= e(number_format($movement['quantity'], 2)) ?> </strong>
+                            <?= e($row['unit_of_measure']) ?>
+                            <br />
+                            <small class="muted"> <?= e(number_format((float) $row['available_quantity'], 2)) ?> currently available</small>
+                        </td>
+                        <td data-label="Order">
+                            <?php if ($row['order_id']): ?>
+                            <a href="<?= e(url('order.php?id=' . $row['order_id'])) ?>">#<?= e($row['order_id']) ?> </a>
+                            <br />
+                            <small class="muted"> <?= e($row['order_type']) ?> · <?= e($row['order_status']) ?> </small>
+                            <?php else: ?>
+                            <span class="muted">Inventory</span>
+                            <?php endif; ?>
+                        </td>
+                        <td data-label="Remarks"><?= e($row['remarks'] ?: '—') ?></td>
+                    </tr>
+                    <?php endforeach; ?>
 <?php if (!$transactions): ?>
-<tr>
-<td colspan="6" class="text-center muted py-4">No stock movements matched these filters.</td>
-</tr>
-<?php endif; ?>
-</tbody>
-</table>
-</div>
-</section>
+                    <tr>
+                        <td colspan="6" class="text-center muted py-4">No stock movements matched these filters.</td>
+                    </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

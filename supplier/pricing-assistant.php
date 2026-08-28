@@ -69,115 +69,132 @@ $pageTitle = 'Pricing and margin assistant';
 require __DIR__ . '/../includes/header.php';
 ?>
 <main class="container">
-<div class="page-head">
-<div>
-<div class="eyebrow">Supplier planning</div>
-<h1>Pricing &amp; margin assistant</h1>
-<p>Simulate a listing price from your real batch cost. Nothing is saved until you publish a listing.</p>
-</div>
-<a class="btn btn-outline-primary" href="<?= e(url('supplier/listings.php')) ?>">Marketplace listings</a>
-</div>
-<?php if ($error): ?>
-<div class="alert alert-danger">
-<?= e($error) ?>
-</div>
-<?php endif; ?>
-<div class="detail-layout">
-<section class="panel mt-0">
-<h2 class="h4">Price simulation</h2>
-<form method="post" class="form-grid">
-<?= csrfField() ?>
-<div class="full">
-<label class="form-label" for="batch_id">Your active batch</label>
-<select class="form-select" name="batch_id" id="batch_id" required>
-<option value="">Choose batch</option>
-<?php foreach ($batches as $row): ?>
-<option value="<?= e($row['batch_id']) ?>" <?= (int) $form['batch_id'] === (int) $row['batch_id'] ? 'selected' : '' ?>>Batch #<?= e($row['batch_id']) ?> · <?= e($row['material_type']) ?> · cost <?= e(money($row['average_cost'])) ?> · <?= e($row['available_quantity']) ?>
-<?= e($row['unit_of_measure']) ?> available</option>
-<?php endforeach; ?>
-</select>
-</div>
-<div>
-<label class="form-label" for="channel">Sales channel</label>
-<select class="form-select" name="channel" id="channel">
-<option value="B2B" <?= $form['channel'] === 'B2B' ? 'selected' : '' ?>>B2B Wholesale</option>
-<option value="B2C" <?= $form['channel'] === 'B2C' ? 'selected' : '' ?>>B2C Retail</option>
-</select>
-</div>
-<div>
-<label class="form-label" for="quantity">Quantity to list</label>
-<input class="form-control" type="number" min="0.01" step="0.01" name="quantity" id="quantity" value="<?= e($form['quantity']) ?>" required>
-</div>
-<div>
-<label class="form-label" for="target_margin">Target gross margin (%)</label>
-<input class="form-control" type="number" min="0" max="99.99" step="0.01" name="target_margin" id="target_margin" value="<?= e($form['target_margin']) ?>" required>
-</div>
-<div>
-<label class="form-label" for="channel_quantity">Minimum order / bundle quantity</label>
-<input class="form-control" type="number" min="0.01" step="0.01" name="channel_quantity" id="channel_quantity" value="<?= e($form['channel_quantity']) ?>" required>
-</div>
-<div class="full">
-<button class="btn btn-primary">Calculate suggestion</button>
-</div>
-</form>
-</section>
-<aside class="panel mt-0">
-<h2 class="h4">How it works</h2>
-<p>Suggested price = cost ÷ (1 − target margin). A 20% margin on a ৳100 cost gives ৳125, not ৳120.</p>
-<?php if ($batch): ?>
-<p>
-<strong>Current B2B prices:</strong>
-<?= e($batch['b2b_prices'] ?: 'None') ?>
-<br>
-<strong>Current B2C prices:</strong>
-<?= e($batch['b2c_prices'] ?: 'None') ?>
-</p>
-<?php endif; ?>
-</aside>
-</div>
-<?php if ($projection): ?>
-<section class="panel">
-<h2 class="h4">Suggested result</h2>
-<div class="stats-grid">
-<div class="stat-card">
-<span>Break-even unit price</span>
-<strong>
-<?= e(money($projection['break_even_price'])) ?>
-</strong>
-</div>
-<div class="stat-card">
-<span>Suggested unit price</span>
-<strong>
-<?= e(money($projection['suggested_price'])) ?>
-</strong>
-</div>
-<div class="stat-card">
-<span>Projected revenue</span>
-<strong>
-<?= e(money($projection['projected_revenue'])) ?>
-</strong>
-</div>
-<div class="stat-card">
-<span>Projected cost</span>
-<strong>
-<?= e(money($projection['projected_cost'])) ?>
-</strong>
-</div>
-<div class="stat-card">
-<span>Projected gross profit</span>
-<strong>
-<?= e(money($projection['projected_profit'])) ?>
-</strong>
-</div>
-<div class="stat-card">
-<span>Actual margin</span>
-<strong>
-<?= e($projection['actual_margin']) ?>%</strong>
-</div>
-</div>
-<a class="btn btn-primary" href="<?= e($projection['listing_url']) ?>">Use this suggestion</a>
-<p class="form-note mt-2">This only prefills the normal listing form. Review and publish it there.</p>
-</section>
-<?php endif; ?>
+    <div class="page-head">
+        <div>
+            <div class="eyebrow">Supplier planning</div>
+            <h1>Pricing &amp; margin assistant</h1>
+            <p>Simulate a listing price from your real batch cost. Nothing is saved until you publish a listing.</p>
+        </div>
+        <a class="btn btn-outline-primary" href="<?= e(url('supplier/listings.php')) ?>">Marketplace listings</a>
+    </div>
+    <?php if ($error): ?>
+    <div class="alert alert-danger"><?= e($error) ?></div>
+    <?php endif; ?>
+    <div class="detail-layout">
+        <section class="panel mt-0">
+            <h2 class="h4">Price simulation</h2>
+            <form method="post" class="form-grid">
+                <?= csrfField() ?>
+                <div class="full">
+                    <label class="form-label" for="batch_id">Your active batch</label>
+                    <select class="form-select" name="batch_id" id="batch_id" required>
+                        <option value="">Choose batch</option>
+                        <?php foreach ($batches as $row): ?>
+                        <option value="<?= e($row['batch_id']) ?>" <?= (int) $form['batch_id'] === (int) $row['batch_id'] ? 'selected' : '' ?>>
+                            Batch #<?= e($row['batch_id']) ?> · <?= e($row['material_type']) ?> · cost <?= e(money($row['average_cost'])) ?> · <?= e($row['available_quantity']) ?> <?= e($row['unit_of_measure']) ?>
+                            available
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="channel">Sales channel</label>
+                    <select class="form-select" name="channel" id="channel">
+                        <option value="B2B" <?= $form['channel'] === 'B2B' ? 'selected' : '' ?>>B2B Wholesale</option>
+                        <option value="B2C" <?= $form['channel'] === 'B2C' ? 'selected' : '' ?>>B2C Retail</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="quantity">Quantity to list</label>
+                    <input
+                        class="form-control"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        name="quantity"
+                        id="quantity"
+                        value="<?= e($form['quantity']) ?>"
+                        required
+                    />
+                </div>
+                <div>
+                    <label class="form-label" for="target_margin">Target gross margin (%)</label>
+                    <input
+                        class="form-control"
+                        type="number"
+                        min="0"
+                        max="99.99"
+                        step="0.01"
+                        name="target_margin"
+                        id="target_margin"
+                        value="<?= e($form['target_margin']) ?>"
+                        required
+                    />
+                </div>
+                <div>
+                    <label class="form-label" for="channel_quantity">Minimum order / bundle quantity</label>
+                    <input
+                        class="form-control"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        name="channel_quantity"
+                        id="channel_quantity"
+                        value="<?= e($form['channel_quantity']) ?>"
+                        required
+                    />
+                </div>
+                <div class="full">
+                    <button class="btn btn-primary">Calculate suggestion</button>
+                </div>
+            </form>
+        </section>
+        <aside class="panel mt-0">
+            <h2 class="h4">How it works</h2>
+            <p>Suggested price = cost ÷ (1 − target margin). A 20% margin on a ৳100 cost gives ৳125, not ৳120.</p>
+            <?php if ($batch): ?>
+            <p>
+                <strong>Current B2B prices:</strong>
+                <?= e($batch['b2b_prices'] ?: 'None') ?>
+                <br />
+                <strong>Current B2C prices:</strong>
+                <?= e($batch['b2c_prices'] ?: 'None') ?>
+            </p>
+            <?php endif; ?>
+        </aside>
+    </div>
+    <?php if ($projection): ?>
+    <section class="panel">
+        <h2 class="h4">Suggested result</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>Break-even unit price</span>
+                <strong> <?= e(money($projection['break_even_price'])) ?> </strong>
+            </div>
+            <div class="stat-card">
+                <span>Suggested unit price</span>
+                <strong> <?= e(money($projection['suggested_price'])) ?> </strong>
+            </div>
+            <div class="stat-card">
+                <span>Projected revenue</span>
+                <strong> <?= e(money($projection['projected_revenue'])) ?> </strong>
+            </div>
+            <div class="stat-card">
+                <span>Projected cost</span>
+                <strong> <?= e(money($projection['projected_cost'])) ?> </strong>
+            </div>
+            <div class="stat-card">
+                <span>Projected gross profit</span>
+                <strong> <?= e(money($projection['projected_profit'])) ?> </strong>
+            </div>
+            <div class="stat-card">
+                <span>Actual margin</span>
+                <strong> <?= e($projection['actual_margin']) ?>%</strong>
+            </div>
+        </div>
+        <a class="btn btn-primary" href="<?= e($projection['listing_url']) ?>">Use this suggestion</a>
+        <p class="form-note mt-2">This only prefills the normal listing form. Review and publish it there.</p>
+    </section>
+    <?php endif; ?>
 </main>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
