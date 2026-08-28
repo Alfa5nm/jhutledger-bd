@@ -9,9 +9,15 @@ $type = trim((string) ($_GET['type'] ?? ''));
 $dateFrom = trim((string) ($_GET['date_from'] ?? ''));
 $dateTo = trim((string) ($_GET['date_to'] ?? ''));
 $types = ['STOCK_ADDED', 'RESERVED', 'RESERVATION_RELEASED', 'SOLD', 'RETURNED', 'ADJUSTMENT_IN', 'ADJUSTMENT_OUT'];
-if (!in_array($type, $types, true)) $type = '';
-if (!validDate($dateFrom)) $dateFrom = '';
-if (!validDate($dateTo)) $dateTo = '';
+if (!in_array($type, $types, true)) {
+    $type = '';
+}
+if (!validDate($dateFrom)) {
+    $dateFrom = '';
+}
+if (!validDate($dateTo)) {
+    $dateTo = '';
+}
 
 $statement = $pdo->prepare('SELECT batch_id,material_type,color,available_quantity,total_quantity,unit_of_measure,status FROM textile_batch WHERE supplier_id=? ORDER BY entry_date DESC,batch_id DESC');
 $statement->execute([$supplierId]);
@@ -19,10 +25,22 @@ $batches = $statement->fetchAll();
 
 $where = ['b.supplier_id=?'];
 $params = [$supplierId];
-if ($batchId) { $where[] = 'st.batch_id=?'; $params[] = $batchId; }
-if ($type !== '') { $where[] = 'st.transaction_type=?'; $params[] = $type; }
-if ($dateFrom !== '') { $where[] = 'DATE(st.transaction_date)>=?'; $params[] = $dateFrom; }
-if ($dateTo !== '') { $where[] = 'DATE(st.transaction_date)<=?'; $params[] = $dateTo; }
+if ($batchId) {
+    $where[] = 'st.batch_id=?';
+    $params[] = $batchId;
+}
+if ($type !== '') {
+    $where[] = 'st.transaction_type=?';
+    $params[] = $type;
+}
+if ($dateFrom !== '') {
+    $where[] = 'DATE(st.transaction_date)>=?';
+    $params[] = $dateFrom;
+}
+if ($dateTo !== '') {
+    $where[] = 'DATE(st.transaction_date)<=?';
+    $params[] = $dateTo;
+}
 $sql = "SELECT st.*,b.material_type,b.color,b.available_quantity,b.total_quantity,b.unit_of_measure,o.order_type,o.order_status
         FROM stock_transaction st JOIN textile_batch b ON b.batch_id=st.batch_id
         LEFT JOIN orders o ON o.order_id=st.order_id WHERE " . implode(' AND ', $where) . '

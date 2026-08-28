@@ -34,11 +34,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $quantity = (float) input('quantity');
         $margin = (float) input('target_margin');
         $channelQuantity = (float) input('channel_quantity');
-        foreach ($batches as $candidate) { if ((int) $candidate['batch_id'] === $batchId) { $batch = $candidate; break; } }
-        if (!$batch) { throw new RuntimeException('Select one of your active batches.'); }
-        if (!in_array($channel, ['B2B', 'B2C'], true)) { throw new RuntimeException('Select a valid sales channel.'); }
-        if ($quantity <= 0 || $quantity > (float) $batch['available_quantity']) { throw new RuntimeException('Listing quantity must be positive and within available stock.'); }
-        if ($channelQuantity <= 0 || $channelQuantity > $quantity) { throw new RuntimeException('Minimum or bundle quantity must fit within the listing quantity.'); }
+        foreach ($batches as $candidate) {
+            if ((int) $candidate['batch_id'] === $batchId) {
+                $batch = $candidate;
+                break;
+            }
+        }
+        if (!$batch) {
+            throw new RuntimeException('Select one of your active batches.');
+        }
+        if (!in_array($channel, ['B2B', 'B2C'], true)) {
+            throw new RuntimeException('Select a valid sales channel.');
+        }
+        if ($quantity <= 0 || $quantity > (float) $batch['available_quantity']) {
+            throw new RuntimeException('Listing quantity must be positive and within available stock.');
+        }
+        if ($channelQuantity <= 0 || $channelQuantity > $quantity) {
+            throw new RuntimeException('Minimum or bundle quantity must fit within the listing quantity.');
+        }
         $projection = pricingProjection((float) $batch['average_cost'], $quantity, $margin);
         $query = [
             'prefill' => '1', 'batch_id' => $batchId, 'listing_type' => $channel,
@@ -47,7 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $channel === 'B2B' ? 'bulk_unit_price' : 'fixed_unit_price' => $projection['suggested_price'],
         ];
         $projection['listing_url'] = url('supplier/listings.php?' . http_build_query($query));
-    } catch (Throwable $exception) { $error = $exception->getMessage(); }
+    } catch (Throwable $exception) {
+        $error = $exception->getMessage();
+    }
 }
 
 $pageTitle = 'Pricing and margin assistant';
@@ -58,8 +73,8 @@ require __DIR__ . '/../includes/header.php';
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <div class="detail-layout">
         <section class="panel mt-0"><h2 class="h4">Price simulation</h2><form method="post" class="form-grid"><?= csrfField() ?>
-            <div class="full"><label class="form-label" for="batch_id">Your active batch</label><select class="form-select" name="batch_id" id="batch_id" required><option value="">Choose batch</option><?php foreach ($batches as $row): ?><option value="<?= e($row['batch_id']) ?>" <?= (int)$form['batch_id']===(int)$row['batch_id']?'selected':'' ?>>Batch #<?= e($row['batch_id']) ?> · <?= e($row['material_type']) ?> · cost <?= e(money($row['average_cost'])) ?> · <?= e($row['available_quantity']) ?> <?= e($row['unit_of_measure']) ?> available</option><?php endforeach; ?></select></div>
-            <div><label class="form-label" for="channel">Sales channel</label><select class="form-select" name="channel" id="channel"><option value="B2B" <?= $form['channel']==='B2B'?'selected':'' ?>>B2B Wholesale</option><option value="B2C" <?= $form['channel']==='B2C'?'selected':'' ?>>B2C Retail</option></select></div>
+            <div class="full"><label class="form-label" for="batch_id">Your active batch</label><select class="form-select" name="batch_id" id="batch_id" required><option value="">Choose batch</option><?php foreach ($batches as $row): ?><option value="<?= e($row['batch_id']) ?>" <?= (int)$form['batch_id'] === (int)$row['batch_id'] ? 'selected' : '' ?>>Batch #<?= e($row['batch_id']) ?> · <?= e($row['material_type']) ?> · cost <?= e(money($row['average_cost'])) ?> · <?= e($row['available_quantity']) ?> <?= e($row['unit_of_measure']) ?> available</option><?php endforeach; ?></select></div>
+            <div><label class="form-label" for="channel">Sales channel</label><select class="form-select" name="channel" id="channel"><option value="B2B" <?= $form['channel'] === 'B2B' ? 'selected' : '' ?>>B2B Wholesale</option><option value="B2C" <?= $form['channel'] === 'B2C' ? 'selected' : '' ?>>B2C Retail</option></select></div>
             <div><label class="form-label" for="quantity">Quantity to list</label><input class="form-control" type="number" min="0.01" step="0.01" name="quantity" id="quantity" value="<?= e($form['quantity']) ?>" required></div>
             <div><label class="form-label" for="target_margin">Target gross margin (%)</label><input class="form-control" type="number" min="0" max="99.99" step="0.01" name="target_margin" id="target_margin" value="<?= e($form['target_margin']) ?>" required></div>
             <div><label class="form-label" for="channel_quantity">Minimum order / bundle quantity</label><input class="form-control" type="number" min="0.01" step="0.01" name="channel_quantity" id="channel_quantity" value="<?= e($form['channel_quantity']) ?>" required></div>

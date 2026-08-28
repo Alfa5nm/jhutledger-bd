@@ -93,13 +93,19 @@ try {
 
     if (!$paymentOrderId) {
         $paymentOrderId = createQuotationBackedDemoOrder(
-            $pdo, $buyerId, (int) $listing['listing_id'], (float) $listing['minimum_quantity']
+            $pdo,
+            $buyerId,
+            (int) $listing['listing_id'],
+            (float) $listing['minimum_quantity']
         );
         submitPayment($pdo, $buyerId, $paymentOrderId, 'Mobile Banking');
     }
     if (!$cancellationOrderId) {
         $cancellationOrderId = createQuotationBackedDemoOrder(
-            $pdo, $buyerId, (int) $listing['listing_id'], (float) $listing['minimum_quantity']
+            $pdo,
+            $buyerId,
+            (int) $listing['listing_id'],
+            (float) $listing['minimum_quantity']
         );
     }
     $pdo->commit();

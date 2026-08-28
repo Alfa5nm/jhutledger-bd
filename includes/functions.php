@@ -24,7 +24,9 @@ function textileImage(string $materialType, string $composition = ''): array
     $searchable = strtolower(trim($materialType . ' ' . $composition));
     $matches = static function (array $keywords) use ($searchable): bool {
         foreach ($keywords as $keyword) {
-            if (str_contains($searchable, $keyword)) return true;
+            if (str_contains($searchable, $keyword)) {
+                return true;
+            }
         }
         return false;
     };

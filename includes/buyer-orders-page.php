@@ -28,7 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'repeat') {
     verifyCsrf();
     $orderId = filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
     try {
-        if (!$orderId) { throw new RuntimeException('Select a valid order.'); }
+        if (!$orderId) {
+            throw new RuntimeException('Select a valid order.');
+        }
         $result = repeatPurchase($pdo, $orderId, $buyerId, $buyerRole);
         if ($result['type'] === 'order') {
             setFlash('success', "Buy again created order #{$result['id']} using the current retail price.");

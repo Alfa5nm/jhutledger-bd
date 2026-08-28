@@ -2,7 +2,10 @@
 require __DIR__ . '/includes/bootstrap.php';
 requireLogin();
 $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$orderId) { http_response_code(404); exit('Order not found.'); }
+if (!$orderId) {
+    http_response_code(404);
+    exit('Order not found.');
+}
 $order = accessibleOrder(db(), $orderId);
 $documentLabel = $order['payment_status'] === 'Paid' ? 'PAID RECEIPT' : ($order['payment_status'] === 'Refunded' ? 'REFUNDED RECEIPT' : 'INVOICE');
 ?>

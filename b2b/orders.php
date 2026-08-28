@@ -1,4 +1,5 @@
 <?php
+
 require __DIR__ . '/../includes/bootstrap.php';
 requireRole('b2b');
 $orderType = 'B2B';

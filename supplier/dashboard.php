@@ -11,9 +11,17 @@ $queries = [
     'Open orders' => ['SELECT COUNT(DISTINCT o.order_id) FROM orders o JOIN order_item oi ON oi.order_id=o.order_id JOIN listing l ON l.listing_id=oi.listing_id JOIN textile_batch b ON b.batch_id=l.batch_id WHERE b.supplier_id=? AND o.order_status IN (\'Pending\',\'Confirmed\',\'Processing\')', [$userId]],
 ];
 $stats = [];
-foreach ($queries as $label => [$sql, $params]) { $s = $pdo->prepare($sql); $s->execute($params); $stats[$label] = $s->fetchColumn(); }
-$statement = $pdo->prepare("SELECT COUNT(*) FROM quotation q JOIN listing l ON l.listing_id=q.listing_id JOIN textile_batch b ON b.batch_id=l.batch_id WHERE b.supplier_id=? AND q.status IN ('Pending','Countered')"); $statement->execute([$userId]); $pendingQuotations=(int)$statement->fetchColumn();
-$statement=$pdo->prepare("SELECT COUNT(*) FROM textile_batch WHERE supplier_id=? AND status='Active' AND total_quantity > 0 AND available_quantity <= total_quantity * 0.20"); $statement->execute([$userId]); $lowStock=(int)$statement->fetchColumn();
+foreach ($queries as $label => [$sql, $params]) {
+    $s = $pdo->prepare($sql);
+    $s->execute($params);
+    $stats[$label] = $s->fetchColumn();
+}
+$statement = $pdo->prepare("SELECT COUNT(*) FROM quotation q JOIN listing l ON l.listing_id=q.listing_id JOIN textile_batch b ON b.batch_id=l.batch_id WHERE b.supplier_id=? AND q.status IN ('Pending','Countered')");
+$statement->execute([$userId]);
+$pendingQuotations = (int)$statement->fetchColumn();
+$statement = $pdo->prepare("SELECT COUNT(*) FROM textile_batch WHERE supplier_id=? AND status='Active' AND total_quantity > 0 AND available_quantity <= total_quantity * 0.20");
+$statement->execute([$userId]);
+$lowStock = (int)$statement->fetchColumn();
 $pageTitle = 'Supplier dashboard';
 require __DIR__ . '/../includes/header.php';
 ?>

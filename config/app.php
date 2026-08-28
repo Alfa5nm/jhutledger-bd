@@ -10,4 +10,3 @@ return [
         explode(',', getenv('JHUTLEDGER_ADMIN_EMAILS') ?: 'admin@jhutledger.local')
     ))),
 ];
-

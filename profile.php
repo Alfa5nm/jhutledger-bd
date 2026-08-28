@@ -18,7 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Enter a valid name and phone number.';
     }
     foreach (['street', 'city', 'district', 'postal_code'] as $field) {
-        if ($updates[$field] === '') $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
+        if ($updates[$field] === '') {
+            $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
+        }
     }
     if (!$errors) {
         $update = $pdo->prepare('UPDATE users SET name = ?, phone = ?, street = ?, city = ?, district = ?, postal_code = ? WHERE user_id = ?');

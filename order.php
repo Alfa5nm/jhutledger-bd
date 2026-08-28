@@ -4,13 +4,18 @@ requireLogin();
 
 $pdo = db();
 $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$orderId) { http_response_code(404); exit('Order not found.'); }
+if (!$orderId) {
+    http_response_code(404);
+    exit('Order not found.');
+}
 $order = accessibleOrder($pdo, $orderId);
 $statement = $pdo->prepare('SELECT * FROM stock_transaction WHERE order_id=? ORDER BY transaction_date,transaction_id');
 $statement->execute([$orderId]);
 $ledger = $statement->fetchAll();
 $stages = ['Confirmed', 'Processing', 'Completed'];
-$stageIndex = match ($order['order_status']) { 'Processing' => 1, 'Completed' => 2, default => 0 };
+$stageIndex = match ($order['order_status']) {
+    'Processing' => 1, 'Completed' => 2, default => 0
+};
 $displayStatus = displayOrderStatus($order);
 $orderImage = textileImage($order['material_type'], $order['composition']);
 $pageTitle = "Order #{$orderId}";
@@ -26,7 +31,9 @@ require __DIR__ . '/includes/header.php';
     <?php if ($order['order_status'] === 'Completed' && !$order['has_return']): ?><div class="action-row mb-3"><a class="btn btn-outline-danger" href="<?= e(url('return.php?order_id=' . $orderId)) ?>">Return full order</a></div><?php endif; ?>
 
     <ol class="order-timeline" aria-label="Order progress">
-        <?php foreach ($stages as $index => $stage): $done = $order['order_status'] !== 'Cancelled' && $stageIndex >= $index; ?><li class="<?= $done ? 'is-complete' : '' ?> <?= $order['order_status'] === $stage ? 'is-current' : '' ?>" <?= $order['order_status'] === $stage ? 'aria-current="step"' : '' ?>><span><?= e($index + 1) ?></span><div><strong><?= e($stage) ?></strong><small><?= e(match ($stage) { 'Confirmed' => 'Stock reserved and order accepted', 'Processing' => 'Supplier is preparing the order', default => 'Sale completed and recorded' }) ?></small></div></li><?php endforeach; ?>
+        <?php foreach ($stages as $index => $stage): $done = $order['order_status'] !== 'Cancelled' && $stageIndex >= $index; ?><li class="<?= $done ? 'is-complete' : '' ?> <?= $order['order_status'] === $stage ? 'is-current' : '' ?>" <?= $order['order_status'] === $stage ? 'aria-current="step"' : '' ?>><span><?= e($index + 1) ?></span><div><strong><?= e($stage) ?></strong><small><?= e(match ($stage) {
+            'Confirmed' => 'Stock reserved and order accepted', 'Processing' => 'Supplier is preparing the order', default => 'Sale completed and recorded'
+        }) ?></small></div></li><?php endforeach; ?>
     </ol>
 
     <figure class="order-material-image"><img src="<?= e($orderImage['src']) ?>" alt="<?= e($orderImage['alt']) ?>" width="1200" height="800" loading="lazy" decoding="async"><figcaption>Representative image · <?= e($orderImage['category']) ?>. The supplier's exact stock may vary.</figcaption></figure>

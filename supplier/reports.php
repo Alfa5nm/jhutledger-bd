@@ -1,4 +1,5 @@
 <?php
+
 require __DIR__ . '/../includes/bootstrap.php';
 requireRole('supplier');
 $reportTitle = 'Sales and profit reports';

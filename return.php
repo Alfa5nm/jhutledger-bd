@@ -4,7 +4,10 @@ requireLogin();
 
 $pdo = db();
 $orderId = filter_input(INPUT_GET, 'order_id', FILTER_VALIDATE_INT);
-if (!$orderId) { http_response_code(404); exit('Order not found.'); }
+if (!$orderId) {
+    http_response_code(404);
+    exit('Order not found.');
+}
 $order = accessibleOrder($pdo, $orderId);
 $user = currentUser();
 
