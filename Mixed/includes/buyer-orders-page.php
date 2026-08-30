@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'cancel') {
     } catch (Throwable $exception) {
         setFlash('danger', $exception->getMessage());
     }
-    redirect(strtolower($orderType) . '/orders.php');
+    redirect('Abir/' . strtolower($orderType) . '/orders.php');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'repeat') {
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'repeat') {
         redirect('Abir/b2b/quotations.php');
     } catch (Throwable $exception) {
         setFlash('danger', $exception->getMessage());
-        redirect(strtolower($orderType) . '/orders.php');
+        redirect('Abir/' . strtolower($orderType) . '/orders.php');
     }
 }
 

@@ -35,7 +35,10 @@ require __DIR__ . '/includes/header.php';
             <?php elseif (currentUser()['role'] === 'admin'): ?>
             <a class="btn btn-primary" href="<?= e(url('Shishir/admin/exceptions.php')) ?>">Operations</a>
             <?php else: ?>
-            <a class="btn btn-primary" href="<?= e(url(strtolower($order['order_type']) . '/orders.php')) ?>">Back to orders</a>
+            <a
+                class="btn btn-primary"
+                href="<?= e(url('Abir/' . strtolower($order['order_type']) . '/orders.php')) ?>"
+            >Back to orders</a>
             <?php endif; ?>
         </div>
     </div>

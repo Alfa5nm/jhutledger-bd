@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         submitPayment($pdo, $buyerId, $orderId, input('payment_method'));
         setFlash('success', 'Payment submitted for administrator verification.');
-        redirect(strtolower(currentUser()['base_role']) . '/orders.php');
+        redirect('Abir/' . strtolower(currentUser()['base_role']) . '/orders.php');
     } catch (Throwable $exception) {
         setFlash('danger', $exception->getMessage());
         redirect('Shishir/payment.php?order_id=' . $orderId);
