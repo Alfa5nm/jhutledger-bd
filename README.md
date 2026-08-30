@@ -8,8 +8,19 @@ Marketplace, Supplier inventory, and order-detail screens also use locally bundl
 
 ## Database diagrams
 
-- [Relational schema diagram](docs/schema-diagram.png)
-- [EER diagram](docs/eer-diagram.png)
+- [Relational schema diagram](Mixed/docs/schema-diagram.png)
+- [EER diagram](Mixed/docs/eer-diagram.png)
+
+## Team ownership
+
+| Folder | Primary owner | Modules |
+|---|---|---|
+| `Farid/` | Farid | Supplier dashboard, batches, listings, stock ledger, and pricing assistant |
+| `Abir/` | Abir | Buyer workspaces, marketplace, quotations, and order processing |
+| `Shishir/` | Shishir | Administration, payments, reports, and sustainability analytics |
+| `Mixed/` | Joint work | Authentication, shared order features, services, assets, database, tests, and documentation |
+
+The root `index.php` only launches the jointly owned landing page. This mapping records primary responsibility; shared infrastructure remains in `Mixed/` rather than being duplicated.
 
 ## Requirements
 
@@ -31,11 +42,11 @@ The configured machine uses XAMPP at `D:\Softwares\XAMPP` and exposes this repos
    D:\Softwares\XAMPP\apache_start.bat
    ```
 
-3. Import `database/schema.sql`, followed by `database/seed.sql`, through phpMyAdmin. PowerShell can also perform the import when XAMPP is installed at `D:\Softwares\XAMPP`:
+3. Import `Mixed/database/schema.sql`, followed by `Mixed/database/seed.sql`, through phpMyAdmin. PowerShell can also perform the import when XAMPP is installed at `D:\Softwares\XAMPP`:
 
    ```powershell
-   Get-Content database\schema.sql -Raw | D:\Softwares\XAMPP\mysql\bin\mysql.exe -u root
-   Get-Content database\seed.sql -Raw | D:\Softwares\XAMPP\mysql\bin\mysql.exe -u root
+   Get-Content Mixed\database\schema.sql -Raw | D:\Softwares\XAMPP\mysql\bin\mysql.exe -u root
+   Get-Content Mixed\database\seed.sql -Raw | D:\Softwares\XAMPP\mysql\bin\mysql.exe -u root
    ```
 
 4. Visit `http://localhost/jhutledger/`.
@@ -63,16 +74,16 @@ Run PHP syntax and database smoke tests:
 
 ```powershell
 Get-ChildItem -Recurse -Filter *.php | ForEach-Object { D:\Softwares\XAMPP\php\php.exe -l $_.FullName }
-D:\Softwares\XAMPP\php\php.exe tests\database_smoke.php
-D:\Softwares\XAMPP\php\php.exe tests\readability_check.php
+D:\Softwares\XAMPP\php\php.exe Mixed\tests\database_smoke.php
+D:\Softwares\XAMPP\php\php.exe Mixed\tests\readability_check.php
 ```
 
-See [docs/VIVA_CHECKLIST.md](docs/VIVA_CHECKLIST.md) for the recommended faculty demonstration.
+See [Mixed/docs/VIVA_CHECKLIST.md](Mixed/docs/VIVA_CHECKLIST.md) for the recommended faculty demonstration.
 
 Before the four-feature demonstration, prepare non-destructive reusable records with:
 
 ```powershell
-D:\Softwares\XAMPP\php\php.exe scripts\prepare_faculty_demo.php
+D:\Softwares\XAMPP\php\php.exe Mixed\scripts\prepare_faculty_demo.php
 ```
 
 The command reuses suitable Confirmed orders when available; otherwise it creates quotation-backed demo orders for completion/payment and cancellation without deleting existing data.
