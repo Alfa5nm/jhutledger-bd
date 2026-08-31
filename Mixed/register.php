@@ -5,77 +5,12 @@ if (isLoggedIn()) {
     redirect(dashboardPath());
 }
 
-$errors = [];
-$values = [
+$errors = (array) ($_SESSION['register_errors'] ?? []);
+$values = (array) ($_SESSION['register_values'] ?? [
     'name' => '', 'email' => '', 'phone' => '', 'street' => '',
     'city' => '', 'district' => '', 'postal_code' => '', 'role' => '',
-];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    foreach (array_keys($values) as $key) {
-        $values[$key] = input($key);
-    }
-    $password = (string) ($_POST['password'] ?? '');
-    $passwordConfirmation = (string) ($_POST['password_confirmation'] ?? '');
-
-    if (mb_strlen($values['name']) < 2 || mb_strlen($values['name']) > 120) {
-        $errors[] = 'Name must be between 2 and 120 characters.';
-    }
-    if (!filter_var($values['email'], FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Enter a valid email address.';
-    }
-    if (!preg_match('/^[0-9+ -]{7,30}$/', $values['phone'])) {
-        $errors[] = 'Enter a valid phone number.';
-    }
-    foreach (['street', 'city', 'district', 'postal_code'] as $field) {
-        if ($values[$field] === '') {
-            $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
-        }
-    }
-    if (!in_array($values['role'], ['supplier', 'b2b', 'b2c'], true)) {
-        $errors[] = 'Select a valid account role.';
-    }
-    if (strlen($password) < 8) {
-        $errors[] = 'Password must contain at least 8 characters.';
-    }
-    if ($password !== $passwordConfirmation) {
-        $errors[] = 'Password confirmation does not match.';
-    }
-
-    if (!$errors) {
-        try {
-            $pdo = db();
-            $pdo->beginTransaction();
-            $statement = $pdo->prepare(
-                'INSERT INTO users (name, email, phone, password_hash, street, city, district, postal_code, user_status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, \'Active\')'
-            );
-            $statement->execute([
-                $values['name'], strtolower($values['email']), $values['phone'], password_hash($password, PASSWORD_DEFAULT),
-                $values['street'], $values['city'], $values['district'], $values['postal_code'],
-            ]);
-            $userId = (int) $pdo->lastInsertId();
-            $subtypeTable = match ($values['role']) {
-                'supplier' => 'supplier',
-                'b2b' => 'b2b_buyer',
-                'b2c' => 'b2c_buyer',
-            };
-            $pdo->prepare("INSERT INTO {$subtypeTable} (user_id) VALUES (?)")->execute([$userId]);
-            $pdo->commit();
-
-            setFlash('success', 'Your account has been created. You can now log in.');
-            redirect('Mixed/login.php');
-        } catch (PDOException $exception) {
-            if (isset($pdo) && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            $errors[] = $exception->getCode() === '23000'
-                ? 'That email address is already registered.'
-                : 'Registration could not reach the database. Please try again.';
-        }
-    }
-}
+]);
+unset($_SESSION['register_errors'], $_SESSION['register_values']);
 
 $pageTitle = 'Create account';
 require __DIR__ . '/includes/header.php';
@@ -95,7 +30,7 @@ require __DIR__ . '/includes/header.php';
             </ul>
         </div>
         <?php endif; ?>
-        <form method="post" novalidate>
+        <form method="post" action="<?= e(url('Mixed/actions/register.php')) ?>" novalidate>
             <?= csrfField() ?>
             <div class="form-grid">
                 <div class="full">

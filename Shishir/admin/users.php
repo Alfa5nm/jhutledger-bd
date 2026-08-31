@@ -3,22 +3,6 @@ require __DIR__ . '/../../Mixed/includes/bootstrap.php';
 requireRole('admin');
 $pdo = db();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
-    $status = input('status');
-    if (!$userId || !in_array($status, ['Active', 'Inactive'], true)) {
-        setFlash('danger', 'Invalid user status request.');
-    } elseif ($userId === (int) currentUser()['user_id']) {
-        setFlash('warning', 'You cannot deactivate your own account.');
-    } else {
-        $statement = $pdo->prepare('UPDATE users SET user_status=? WHERE user_id=?');
-        $statement->execute([$status, $userId]);
-        setFlash('success', 'User status updated. No historical record was deleted.');
-    }
-    redirect('Shishir/admin/users.php' . (input('return_q') !== '' ? '?q=' . urlencode(input('return_q')) : ''));
-}
-
 $search = trim((string) ($_GET['q'] ?? ''));
 $sql = "SELECT u.user_id, u.name, u.email, u.phone, u.user_status, u.created_at,
                CASE
@@ -102,7 +86,7 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                             <?php if ((int) $user['user_id'] === (int) currentUser()['user_id']):?>
                             <span class="muted small">Current account</span>
                             <?php else:?>
-                            <form method="post">
+                            <form method="post" action="<?= e(url('Shishir/admin/actions/update-user-status.php')) ?>">
                                 <?=csrfField()?>
                                 <input type="hidden" name="user_id" value="<?=e($user['user_id'])?>" />
                                 <input type="hidden" name="return_q" value="<?=e($search)?>" />

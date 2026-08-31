@@ -6,31 +6,8 @@ $pdo = db();
 $statement = $pdo->prepare('SELECT user_id, name, email, phone, street, city, district, postal_code, user_status, created_at FROM users WHERE user_id = ?');
 $statement->execute([currentUser()['user_id']]);
 $profile = $statement->fetch();
-$errors = [];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $updates = [
-        'name' => input('name'), 'phone' => input('phone'), 'street' => input('street'),
-        'city' => input('city'), 'district' => input('district'), 'postal_code' => input('postal_code'),
-    ];
-    if (mb_strlen($updates['name']) < 2 || !preg_match('/^[0-9+ -]{7,30}$/', $updates['phone'])) {
-        $errors[] = 'Enter a valid name and phone number.';
-    }
-    foreach (['street', 'city', 'district', 'postal_code'] as $field) {
-        if ($updates[$field] === '') {
-            $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
-        }
-    }
-    if (!$errors) {
-        $update = $pdo->prepare('UPDATE users SET name = ?, phone = ?, street = ?, city = ?, district = ?, postal_code = ? WHERE user_id = ?');
-        $update->execute([...array_values($updates), currentUser()['user_id']]);
-        refreshSessionUser($pdo);
-        setFlash('success', 'Profile updated successfully.');
-        redirect('Mixed/profile.php');
-    }
-    $profile = array_merge($profile, $updates);
-}
+$profile = array_merge($profile, (array) ($_SESSION['profile_values'] ?? []));
+unset($_SESSION['profile_values']);
 
 $pageTitle = 'Profile';
 require __DIR__ . '/includes/header.php';
@@ -44,16 +21,7 @@ require __DIR__ . '/includes/header.php';
         <span class="<?= e(statusClass($profile['user_status'])) ?>"> <?= e($profile['user_status']) ?> </span>
     </div>
     <div class="panel mt-0">
-        <?php if ($errors): ?>
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                <?php foreach ($errors as $error): ?>
-                <li><?= e($error) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-        <?php endif; ?>
-        <form method="post">
+        <form method="post" action="<?= e(url('Mixed/actions/update-profile.php')) ?>">
             <?= csrfField() ?>
             <div class="form-grid">
                 <div class="full">

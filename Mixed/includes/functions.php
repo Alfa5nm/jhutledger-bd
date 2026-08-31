@@ -88,6 +88,15 @@ function verifyCsrf(): void
     }
 }
 
+function requirePost(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        header('Allow: POST');
+        exit('This action only accepts POST requests.');
+    }
+}
+
 function input(string $key): string
 {
     return trim((string) ($_POST[$key] ?? ''));

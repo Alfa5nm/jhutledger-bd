@@ -3,71 +3,6 @@ require __DIR__ . '/../../Mixed/includes/bootstrap.php';
 requireRole('b2b');
 $pdo = db();
 $buyerId = (int) currentUser()['user_id'];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $action = input('action');
-    $quotationId = filter_input(INPUT_POST, 'quotation_id', FILTER_VALIDATE_INT);
-    try {
-        if ($action === 'create') {
-            $listingId = filter_input(INPUT_POST, 'listing_id', FILTER_VALIDATE_INT);
-            $quantity = (float) input('requested_quantity');
-            $price = (float) input('proposed_price');
-            $expiry = input('expiry_date');
-            if (!$listingId || $quantity <= 0 || $price < 0 || !validDate($expiry) || $expiry < date('Y-m-d')) {
-                throw new RuntimeException('Enter valid quotation terms.');
-            }
-            $pdo->beginTransaction();
-            $listing = lockListing($pdo, $listingId, 'B2B');
-            $outsideWholesaleRange = $quantity < (float) $listing['minimum_quantity']
-                || $quantity > reservableQuantity($listing);
-            if ($listing['listing_status'] !== 'Active' || $listing['batch_status'] !== 'Active' || $outsideWholesaleRange) {
-                throw new RuntimeException('Requested quantity is outside the available wholesale range.');
-            }
-            $statement = $pdo->prepare(
-                "SELECT COUNT(*)
-                 FROM quotation
-                 WHERE buyer_id = ? AND listing_id = ? AND status IN ('Pending', 'Countered')"
-            );
-            $statement->execute([$buyerId, $listingId]);
-            if ($statement->fetchColumn()) {
-                throw new RuntimeException('You already have an open quotation for this listing.');
-            }
-            $statement = $pdo->prepare(
-                'INSERT INTO quotation
-                    (buyer_id, listing_id, requested_quantity, proposed_price, expiry_date)
-                 VALUES (?, ?, ?, ?, ?)'
-            );
-            $statement->execute([$buyerId, $listingId, $quantity, $price, $expiry]);
-            $pdo->commit();
-            setFlash('success', 'Quotation request sent to the supplier.');
-        } elseif ($action === 'accept' && $quotationId) {
-            $orderId = acceptQuotation($pdo, $quotationId, 'b2b', $buyerId);
-            setFlash('success', "Counter-offer accepted. Order #{$orderId} was confirmed and stock reserved.");
-        } elseif ($action === 'cancel' && $quotationId) {
-            $statement = $pdo->prepare(
-                "UPDATE quotation
-                 SET status = 'Cancelled'
-                 WHERE quotation_id = ? AND buyer_id = ? AND status IN ('Pending', 'Countered')"
-            );
-            $statement->execute([$quotationId, $buyerId]);
-            if (!$statement->rowCount()) {
-                throw new RuntimeException('Quotation cannot be cancelled.');
-            }
-            setFlash('success', 'Quotation cancelled.');
-        } else {
-            throw new RuntimeException('Invalid quotation action.');
-        }
-        if ($pdo->inTransaction()) {
-            $pdo->commit();
-        }
-    } catch (Throwable $exception) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        setFlash('danger', $exception->getMessage());
-    }
-    redirect('Abir/b2b/quotations.php');
-}
 $statement = $pdo->prepare(
     'SELECT q.*, b.material_type, b.color, b.unit_of_measure,
             u.name AS supplier_name, o.order_id
@@ -130,19 +65,19 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                         </td>
                         <td>
                             <?php if ($quotation['status'] === 'Countered'):?>
-                            <form method="post" class="action-row">
+                            <form method="post" action="<?= e(url('Abir/b2b/actions/accept-quotation.php')) ?>" class="action-row">
                                 <?=csrfField()?>
                                 <input type="hidden" name="quotation_id" value="<?=e($quotation['quotation_id'])?>" />
-                                <button class="btn btn-sm btn-primary" name="action" value="accept">Accept</button>
-                                <button class="btn btn-sm btn-outline-danger" name="action" value="cancel">
+                                <button class="btn btn-sm btn-primary">Accept</button>
+                                <button class="btn btn-sm btn-outline-danger" formaction="<?= e(url('Abir/b2b/actions/cancel-quotation.php')) ?>">
                                     Cancel
                                 </button>
                             </form>
                             <?php elseif ($quotation['status'] === 'Pending'):?>
-                            <form method="post">
+                            <form method="post" action="<?= e(url('Abir/b2b/actions/cancel-quotation.php')) ?>">
                                 <?=csrfField()?>
                                 <input type="hidden" name="quotation_id" value="<?=e($quotation['quotation_id'])?>" />
-                                <button class="btn btn-sm btn-outline-danger" name="action" value="cancel">
+                                <button class="btn btn-sm btn-outline-danger">
                                     Cancel
                                 </button>
                             </form>

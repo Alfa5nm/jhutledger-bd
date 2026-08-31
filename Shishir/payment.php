@@ -4,23 +4,10 @@ requireRole(['b2b', 'b2c']);
 
 $pdo = db();
 $buyerId = (int) currentUser()['user_id'];
-$orderId = filter_input(INPUT_GET, 'order_id', FILTER_VALIDATE_INT)
-    ?: filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
+$orderId = filter_input(INPUT_GET, 'order_id', FILTER_VALIDATE_INT);
 if (!$orderId) {
     http_response_code(404);
     exit('Order not found.');
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    try {
-        submitPayment($pdo, $buyerId, $orderId, input('payment_method'));
-        setFlash('success', 'Payment submitted for administrator verification.');
-        redirect('Abir/' . strtolower(currentUser()['base_role']) . '/orders.php');
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-        redirect('Shishir/payment.php?order_id=' . $orderId);
-    }
 }
 
 $statement = $pdo->prepare(
@@ -86,7 +73,7 @@ require __DIR__ . '/../Mixed/includes/header.php';
             </div>
         </dl>
         <?php if ($canSubmit): ?>
-        <form method="post" class="mt-4">
+        <form method="post" action="<?= e(url('Shishir/actions/submit-payment.php')) ?>" class="mt-4">
             <?= csrfField() ?>
             <input type="hidden" name="order_id" value="<?= e($orderId) ?>" />
             <label class="form-label" for="payment_method">Payment method</label>

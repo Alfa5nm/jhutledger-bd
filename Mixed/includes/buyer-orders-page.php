@@ -9,41 +9,6 @@ if (!isset($orderType, $buyerRole) || !in_array($orderType, ['B2B', 'B2C'], true
 $pdo = db();
 $buyerId = (int) currentUser()['user_id'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'cancel') {
-    verifyCsrf();
-    $orderId = filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
-    try {
-        if (!$orderId) {
-            throw new RuntimeException('Select a valid order.');
-        }
-        cancelOrder($pdo, $orderId, $buyerRole, $buyerId);
-        setFlash('success', "Order #{$orderId} was cancelled and its reserved stock was restored.");
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-    }
-    redirect('Abir/' . strtolower($orderType) . '/orders.php');
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && input('action') === 'repeat') {
-    verifyCsrf();
-    $orderId = filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
-    try {
-        if (!$orderId) {
-            throw new RuntimeException('Select a valid order.');
-        }
-        $result = repeatPurchase($pdo, $orderId, $buyerId, $buyerRole);
-        if ($result['type'] === 'order') {
-            setFlash('success', "Buy again created order #{$result['id']} using the current retail price.");
-            redirect('Mixed/order.php?id=' . $result['id']);
-        }
-        setFlash('success', "Repeat purchase created quotation #{$result['id']} using current wholesale terms.");
-        redirect('Abir/b2b/quotations.php');
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-        redirect('Abir/' . strtolower($orderType) . '/orders.php');
-    }
-}
-
 $statement = $pdo->prepare(
     "SELECT o.*, oi.quantity, oi.selling_price, l.listing_id,
             b.material_type, b.color, b.unit_of_measure, supplier.name AS supplier_name,
@@ -126,18 +91,17 @@ require __DIR__ . '/header.php';
 <?php if (in_array($order['order_status'], ['Pending', 'Confirmed'], true)): ?>
                                 <form
                                     method="post"
+                                    action="<?= e(url('Mixed/actions/cancel-order.php')) ?>"
                                     onsubmit="return confirm('Cancel this order and restore its reserved stock?');"
                                 >
                                     <?= csrfField() ?>
-                                    <input type="hidden" name="action" value="cancel" />
                                     <input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>" />
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
                                 </form>
                                 <?php endif; ?>
 <?php if (in_array($order['order_status'], ['Completed', 'Cancelled'], true)): ?>
-                                <form method="post">
+                                <form method="post" action="<?= e(url('Mixed/actions/repeat-order.php')) ?>">
                                     <?= csrfField() ?>
-                                    <input type="hidden" name="action" value="repeat" />
                                     <input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>" />
                                     <button class="btn btn-sm btn-outline-primary" type="submit">Buy again</button>
                                 </form>

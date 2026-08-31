@@ -11,18 +11,6 @@ if (!$orderId) {
 $order = accessibleOrder($pdo, $orderId);
 $user = currentUser();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    try {
-        returnOrder($pdo, $orderId, $user['role'], (int) $user['user_id']);
-        setFlash('success', "Order #{$orderId} was returned. Stock was restored and any paid payment was refunded.");
-        redirect('Mixed/order.php?id=' . $orderId);
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-        redirect('Mixed/return.php?order_id=' . $orderId);
-    }
-}
-
 $pageTitle = "Return order #{$orderId}";
 require __DIR__ . '/includes/header.php';
 ?>
@@ -71,10 +59,12 @@ require __DIR__ . '/includes/header.php';
         </p>
         <form
             method="post"
+            action="<?= e(url('Mixed/actions/return-order.php')) ?>"
             class="action-row"
             onsubmit="return confirm('Return the complete order and restore all stock?');"
         >
             <?= csrfField() ?>
+            <input type="hidden" name="order_id" value="<?= e($orderId) ?>" />
             <button class="btn btn-danger" type="submit">Confirm full return</button>
             <a class="btn btn-outline-primary" href="<?= e(url('Mixed/order.php?id=' . $orderId)) ?>">Keep order</a>
         </form>

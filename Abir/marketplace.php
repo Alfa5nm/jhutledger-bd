@@ -136,9 +136,8 @@ require __DIR__ . '/../Mixed/includes/header.php';
                 </div>
             </dl>
             <?php if ($type === 'B2B'):?>
-            <form method="post" action="<?=e(url('Abir/b2b/quotations.php'))?>" class="order-box">
+            <form method="post" action="<?=e(url('Abir/b2b/actions/create-quotation.php'))?>" class="order-box">
                 <?=csrfField()?>
-                <input type="hidden" name="action" value="create" />
                 <input type="hidden" name="listing_id" value="<?=e($listing['listing_id'])?>" />
                 <div>
                     <label class="form-label">Order quantity (minimum <?=e($listing['minimum_quantity'])?> <?=e($listing['unit_of_measure'])?>)</label>
@@ -169,9 +168,8 @@ require __DIR__ . '/../Mixed/includes/header.php';
                 <button class="btn btn-primary full-button">Request quotation</button>
             </form>
             <?php else:?>
-            <form method="post" action="<?=e(url('Abir/b2c/orders.php'))?>" class="order-box">
+            <form method="post" action="<?=e(url('Abir/b2c/actions/place-order.php'))?>" class="order-box">
                 <?=csrfField()?>
-                <input type="hidden" name="action" value="place" />
                 <input type="hidden" name="listing_id" value="<?=e($listing['listing_id'])?>" />
                 <div class="wide">
                     <label class="form-label">Order quantity (bundle of <?=e($listing['bundle_size'])?> <?=e($listing['unit_of_measure'])?>)</label>

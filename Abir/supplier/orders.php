@@ -4,32 +4,6 @@ requireRole('supplier');
 
 $pdo = db();
 $supplierId = (int) currentUser()['user_id'];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $orderId = filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
-    $action = input('action');
-    try {
-        if (!$orderId) {
-            throw new RuntimeException('Select a valid order.');
-        }
-        if ($action === 'processing') {
-            advanceOrderStatus($pdo, $orderId, $supplierId, 'Processing');
-            setFlash('success', "Order #{$orderId} is now processing.");
-        } elseif ($action === 'complete') {
-            advanceOrderStatus($pdo, $orderId, $supplierId, 'Completed');
-            setFlash('success', "Order #{$orderId} completed and the sale was added to the stock ledger.");
-        } elseif ($action === 'cancel') {
-            cancelOrder($pdo, $orderId, 'supplier', $supplierId);
-            setFlash('success', "Order #{$orderId} cancelled and stock restored.");
-        } else {
-            throw new RuntimeException('Invalid order action.');
-        }
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-    }
-    redirect('Abir/supplier/orders.php');
-}
-
 $statement = $pdo->prepare(
     "SELECT o.*, oi.quantity, b.material_type, b.color, b.unit_of_measure,
             buyer.name AS buyer_name, buyer.email AS buyer_email,
@@ -108,18 +82,18 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                                 <a class="btn btn-sm btn-outline-primary" href="<?=e(url('Mixed/order.php?id=' . $order['order_id']))?>">Details</a>
                                 <a class="btn btn-sm btn-outline-primary" href="<?=e(url('Mixed/invoice.php?id=' . $order['order_id']))?>">Invoice</a>
                                 <?php if ($order['order_status'] === 'Confirmed'): ?>
-                                <form method="post">
+                                <form method="post" action="<?= e(url('Abir/supplier/actions/process-order.php')) ?>">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>" />
-                                    <button class="btn btn-sm btn-primary" name="action" value="processing">
+                                    <button class="btn btn-sm btn-primary">
                                         Start processing
                                     </button>
                                 </form>
                                 <?php elseif ($order['order_status'] === 'Processing'): ?>
-                                <form method="post">
+                                <form method="post" action="<?= e(url('Abir/supplier/actions/complete-order.php')) ?>">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>" />
-                                    <button class="btn btn-sm btn-primary" name="action" value="complete">
+                                    <button class="btn btn-sm btn-primary">
                                         Complete
                                     </button>
                                 </form>
@@ -127,11 +101,12 @@ require __DIR__ . '/../../Mixed/includes/header.php';
 <?php if (in_array($order['order_status'], ['Pending', 'Confirmed'], true)): ?>
                                 <form
                                     method="post"
+                                    action="<?= e(url('Abir/supplier/actions/cancel-order.php')) ?>"
                                     onsubmit="return confirm('Cancel this order and restore the reserved stock?');"
                                 >
                                     <?= csrfField() ?>
                                     <input type="hidden" name="order_id" value="<?= e($order['order_id']) ?>" />
-                                    <button class="btn btn-sm btn-outline-danger" name="action" value="cancel">
+                                    <button class="btn btn-sm btn-outline-danger">
                                         Cancel
                                     </button>
                                 </form>

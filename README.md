@@ -76,9 +76,12 @@ Run PHP syntax and database smoke tests:
 Get-ChildItem -Recurse -Filter *.php | ForEach-Object { D:\Softwares\XAMPP\php\php.exe -l $_.FullName }
 D:\Softwares\XAMPP\php\php.exe Mixed\tests\database_smoke.php
 D:\Softwares\XAMPP\php\php.exe Mixed\tests\readability_check.php
+D:\Softwares\XAMPP\php\php.exe Mixed\tests\request_flow_check.php
 ```
 
 See [Mixed/docs/VIVA_CHECKLIST.md](Mixed/docs/VIVA_CHECKLIST.md) for the recommended faculty demonstration.
+See [Mixed/docs/REQUEST_FLOW_GUIDE.md](Mixed/docs/REQUEST_FLOW_GUIDE.md) for the beginner-readable path from each form
+to its POST action, service function, prepared query type, and redirect.
 
 Before the four-feature demonstration, prepare non-destructive reusable records with:
 

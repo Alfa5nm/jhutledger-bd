@@ -3,21 +3,6 @@ require __DIR__ . '/../../Mixed/includes/bootstrap.php';
 requireRole('admin');
 
 $pdo = db();
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $paymentId = filter_input(INPUT_POST, 'payment_id', FILTER_VALIDATE_INT);
-    try {
-        if (!$paymentId) {
-            throw new RuntimeException('Select a valid payment.');
-        }
-        reviewPayment($pdo, $paymentId, input('status'));
-        setFlash('success', "Payment #{$paymentId} was reviewed.");
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-    }
-    $return = http_build_query(array_filter(['q' => input('return_q'), 'status' => input('return_status')]));
-    redirect('Shishir/admin/payments.php' . ($return ? '?' . $return : ''));
-}
 
 $search = trim((string) ($_GET['q'] ?? ''));
 $status = trim((string) ($_GET['status'] ?? ''));
@@ -126,7 +111,7 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                         </td>
                         <td>
                             <?php if ($payment['payment_status'] === 'Pending'): ?>
-                            <form method="post" class="action-row">
+                            <form method="post" action="<?= e(url('Shishir/admin/actions/update-payment.php')) ?>" class="action-row">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="payment_id" value="<?= e($payment['payment_id']) ?>" />
                                 <input type="hidden" name="return_q" value="<?= e($search) ?>" />

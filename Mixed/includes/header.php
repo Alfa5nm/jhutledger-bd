@@ -83,7 +83,7 @@ $flashes = getFlashes();
                     <div class="nav-group nav-account">
                         <span class="nav-group-label">Account</span>
                         <a href="<?= e(url('Mixed/profile.php')) ?>">Profile</a>
-                        <form method="post" action="<?= e(url('Mixed/logout.php')) ?>" class="inline-form">
+                        <form method="post" action="<?= e(url('Mixed/actions/logout.php')) ?>" class="inline-form">
                             <?= csrfField() ?>
                             <button type="submit" class="link-button">Logout</button>
                         </form>

@@ -3,153 +3,6 @@ require __DIR__ . '/../../Mixed/includes/bootstrap.php';
 requireRole('supplier');
 $pdo = db();
 $supplierId = (int) currentUser()['user_id'];
-$errors = [];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $action = input('action');
-    $listingId = filter_input(INPUT_POST, 'listing_id', FILTER_VALIDATE_INT) ?: null;
-    if ($action === 'archive' && $listingId) {
-        $statement = $pdo->prepare(
-            "UPDATE listing AS l
-             JOIN textile_batch AS b ON b.batch_id = l.batch_id
-             SET l.status = 'Inactive'
-             WHERE l.listing_id = ? AND b.supplier_id = ?"
-        );
-        $statement->execute([$listingId, $supplierId]);
-        $wasArchived = $statement->rowCount() > 0;
-        setFlash(
-            $wasArchived ? 'success' : 'danger',
-            $wasArchived ? 'Listing archived.' : 'Listing not found.'
-        );
-        redirect('Farid/supplier/listings.php');
-    }
-    $batchId = (int) input('batch_id');
-    $type = input('listing_type');
-    $quantity = (float) input('listed_quantity');
-    $status = input('status');
-    $minimum = $type === 'B2B' ? (float) input('minimum_quantity') : 0.0;
-    $bulkPrice = $type === 'B2B' ? (float) input('bulk_unit_price') : 0.0;
-    $bundle = $type === 'B2C' ? (float) input('bundle_size') : 0.0;
-    $fixedPrice = $type === 'B2C' ? (float) input('fixed_unit_price') : 0.0;
-    if ($batchId <= 0 || $quantity <= 0) {
-        $errors[] = 'Select a batch and enter a positive listed quantity.';
-    }
-    if (!in_array($type, ['B2B', 'B2C'], true)) {
-        $errors[] = 'Select a valid listing type.';
-    }
-    if (!in_array($status, ['Active', 'Inactive'], true)) {
-        $errors[] = 'Select a valid status.';
-    }
-    if ($type === 'B2B' && $minimum <= 0) {
-        $errors[] = 'Enter a positive minimum order quantity for the B2B listing.';
-    }
-    if ($type === 'B2B' && $minimum > $quantity) {
-        $errors[] = 'Minimum order quantity cannot exceed the listed quantity.';
-    }
-    if ($type === 'B2B' && $bulkPrice <= 0) {
-        $errors[] = 'Enter a positive wholesale unit price.';
-    }
-    if ($type === 'B2C' && $bundle <= 0) {
-        $errors[] = 'Enter a positive bundle quantity for the B2C listing.';
-    }
-    if ($type === 'B2C' && $bundle > $quantity) {
-        $errors[] = 'Bundle quantity cannot exceed the listed quantity.';
-    }
-    if ($type === 'B2C' && $fixedPrice <= 0) {
-        $errors[] = 'Enter a positive retail unit price.';
-    }
-    if (!$errors) {
-        $pdo->beginTransaction();
-        try {
-            $statement = $pdo->prepare('SELECT * FROM textile_batch WHERE batch_id=? AND supplier_id=? FOR UPDATE');
-            $statement->execute([$batchId, $supplierId]);
-            $batch = $statement->fetch();
-            if (!$batch) {
-                throw new RuntimeException('Batch not found.');
-            }
-            if ($listingId) {
-                $statement = $pdo->prepare(
-                    "SELECT l.*, IF(bl.listing_id IS NULL, 'B2C', 'B2B') AS listing_type
-                     FROM listing AS l
-                     JOIN textile_batch AS b ON b.batch_id = l.batch_id
-                     LEFT JOIN b2b_listing AS bl ON bl.listing_id = l.listing_id
-                     WHERE l.listing_id = ? AND b.supplier_id = ?
-                     FOR UPDATE"
-                );
-                $statement->execute([$listingId, $supplierId]);
-                $old = $statement->fetch();
-                if (!$old) {
-                    throw new RuntimeException('Listing not found.');
-                }
-                if ((int) $old['batch_id'] !== $batchId || $old['listing_type'] !== $type) {
-                    throw new RuntimeException('A listing cannot change its batch or sales channel after creation.');
-                }
-            }
-            $statement = $pdo->prepare(
-                "SELECT COALESCE(SUM(listed_quantity), 0)
-                 FROM listing
-                 WHERE batch_id = ? AND status = 'Active' AND listing_id <> ?"
-            );
-            $statement->execute([$batchId, $listingId ?: 0]);
-            $other = (float) $statement->fetchColumn();
-            $remaining = max(0, (float) $batch['available_quantity'] - $other);
-            if ($status === 'Active' && $quantity > $remaining + 0.0001) {
-                $available = number_format($remaining, 2) . ' ' . $batch['unit_of_measure'];
-                throw new RuntimeException("Only {$available} remains available for allocation in this batch.");
-            }
-            if ($listingId) {
-                $statement = $pdo->prepare(
-                    'UPDATE listing SET listed_quantity = ?, status = ? WHERE listing_id = ?'
-                );
-                $statement->execute([$quantity, $status, $listingId]);
-                if ($type === 'B2B') {
-                    $statement = $pdo->prepare(
-                        'UPDATE b2b_listing
-                         SET minimum_quantity = ?, bulk_unit_price = ?
-                         WHERE listing_id = ?'
-                    );
-                    $statement->execute([$minimum, $bulkPrice, $listingId]);
-                } else {
-                    $statement = $pdo->prepare(
-                        'UPDATE b2c_listing
-                         SET bundle_size = ?, fixed_unit_price = ?
-                         WHERE listing_id = ?'
-                    );
-                    $statement->execute([$bundle, $fixedPrice, $listingId]);
-                }
-                setFlash('success', 'Listing updated successfully.');
-            } else {
-                $statement = $pdo->prepare(
-                    'INSERT INTO listing (batch_id, listed_quantity, status) VALUES (?, ?, ?)'
-                );
-                $statement->execute([$batchId, $quantity, $status]);
-                $listingId = (int) $pdo->lastInsertId();
-                if ($type === 'B2B') {
-                    $statement = $pdo->prepare(
-                        'INSERT INTO b2b_listing (listing_id, minimum_quantity, bulk_unit_price)
-                         VALUES (?, ?, ?)'
-                    );
-                    $statement->execute([$listingId, $minimum, $bulkPrice]);
-                } else {
-                    $statement = $pdo->prepare(
-                        'INSERT INTO b2c_listing (listing_id, bundle_size, fixed_unit_price)
-                         VALUES (?, ?, ?)'
-                    );
-                    $statement->execute([$listingId, $bundle, $fixedPrice]);
-                }
-                setFlash('success', 'Marketplace listing created.');
-            }
-            $pdo->commit();
-            redirect('Farid/supplier/listings.php');
-        } catch (Throwable $exception) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            $errors[] = $exception->getMessage();
-        }
-    }
-}
 $edit = null;
 if (isset($_GET['edit'])) {
     $statement = $pdo->prepare(
@@ -211,6 +64,12 @@ $form = $edit ?: [
     'bundle_size' => '',
     'fixed_unit_price' => '',
 ];
+$submittedValues = $_SESSION['listing_values'] ?? null;
+unset($_SESSION['listing_values']);
+
+if (is_array($submittedValues)) {
+    $form = array_merge($form, $submittedValues);
+}
 if (!$edit && ($_GET['prefill'] ?? '') === '1') {
     $prefillBatch = filter_input(INPUT_GET, 'batch_id', FILTER_VALIDATE_INT);
     $prefillType = in_array(($_GET['listing_type'] ?? ''), ['B2B', 'B2C'], true) ? $_GET['listing_type'] : '';
@@ -247,15 +106,6 @@ require __DIR__ . '/../../Mixed/includes/header.php';
         </div>
         <a class="btn btn-outline-primary" href="<?=e(url('Farid/supplier/batches.php'))?>">Manage batches</a>
     </div>
-    <?php if ($errors):?>
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            <?php foreach ($errors as $error):?>
-            <li><?=e($error)?></li>
-            <?php endforeach;?>
-        </ul>
-    </div>
-    <?php endif;?>
     <section class="panel">
         <div class="section-heading">
             <div>
@@ -266,9 +116,8 @@ require __DIR__ . '/../../Mixed/includes/header.php';
             <span class="channel-badge channel-<?=e(strtolower($form['listing_type']))?>"> <?=e($form['listing_type'] === 'B2B' ? 'B2B Wholesale' : 'B2C Retail')?> </span>
             <?php endif;?>
         </div>
-        <form method="post" data-listing-form data-edit-current="<?=e($edit && $form['status'] === 'Active' ? $form['listed_quantity'] : 0)?>">
+        <form method="post" action="<?= e(url('Farid/supplier/actions/save-listing.php')) ?>" data-listing-form data-edit-current="<?=e($edit && $form['status'] === 'Active' ? $form['listed_quantity'] : 0)?>">
             <?=csrfField()?>
-            <input type="hidden" name="action" value="save" />
             <input type="hidden" name="listing_id" value="<?=e($form['listing_id'])?>" />
             <div class="form-grid">
                 <div>
@@ -512,9 +361,8 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                             <div class="action-row">
                                 <a class="btn btn-sm btn-outline-primary" href="?edit=<?=e($listing['listing_id'])?>">Edit</a>
                                 <?php if ($listing['status'] === 'Active'):?>
-                                <form method="post">
+                                <form method="post" action="<?= e(url('Farid/supplier/actions/archive-listing.php')) ?>">
                                     <?=csrfField()?>
-                                    <input type="hidden" name="action" value="archive" />
                                     <input type="hidden" name="listing_id" value="<?=e($listing['listing_id'])?>" />
                                     <button class="btn btn-sm btn-outline-danger">Archive</button>
                                 </form>

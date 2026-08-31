@@ -3,55 +3,6 @@ require __DIR__ . '/../../Mixed/includes/bootstrap.php';
 requireRole('supplier');
 $pdo = db();
 $supplierId = (int) currentUser()['user_id'];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $action = input('action');
-    $quotationId = filter_input(INPUT_POST, 'quotation_id', FILTER_VALIDATE_INT);
-    try {
-        if (!$quotationId) {
-            throw new RuntimeException('Invalid quotation.');
-        }
-        if ($action === 'accept') {
-            $orderId = acceptQuotation($pdo, $quotationId, 'supplier', $supplierId);
-            setFlash('success', "Quotation accepted. Order #{$orderId} confirmed and stock reserved.");
-        } elseif ($action === 'counter') {
-            $price = (float) input('counter_price');
-            if ($price < 0) {
-                throw new RuntimeException('Counter price cannot be negative.');
-            }
-            $statement = $pdo->prepare(
-                "UPDATE quotation AS q
-                 JOIN listing AS l ON l.listing_id = q.listing_id
-                 JOIN textile_batch AS b ON b.batch_id = l.batch_id
-                 SET q.counter_price = ?, q.status = 'Countered'
-                 WHERE q.quotation_id = ? AND b.supplier_id = ? AND q.status = 'Pending'"
-            );
-            $statement->execute([$price, $quotationId, $supplierId]);
-            if (!$statement->rowCount()) {
-                throw new RuntimeException('Quotation cannot be countered.');
-            }
-            setFlash('success', 'Counter-offer sent to the buyer.');
-        } elseif ($action === 'reject') {
-            $statement = $pdo->prepare(
-                "UPDATE quotation AS q
-                 JOIN listing AS l ON l.listing_id = q.listing_id
-                 JOIN textile_batch AS b ON b.batch_id = l.batch_id
-                 SET q.status = 'Rejected'
-                 WHERE q.quotation_id = ? AND b.supplier_id = ? AND q.status IN ('Pending', 'Countered')"
-            );
-            $statement->execute([$quotationId, $supplierId]);
-            if (!$statement->rowCount()) {
-                throw new RuntimeException('Quotation cannot be rejected.');
-            }
-            setFlash('success', 'Quotation rejected.');
-        } else {
-            throw new RuntimeException('Invalid quotation action.');
-        }
-    } catch (Throwable $exception) {
-        setFlash('danger', $exception->getMessage());
-    }
-    redirect('Abir/supplier/quotations.php');
-}
 $statement = $pdo->prepare(
     'SELECT q.*, b.material_type, b.color, b.unit_of_measure,
             u.name AS buyer_name, o.order_id
@@ -120,10 +71,10 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                         </td>
                         <td>
                             <?php if ($quotation['status'] === 'Pending'):?>
-                            <form method="post" class="quote-actions">
+                            <form method="post" action="<?= e(url('Abir/supplier/actions/accept-quotation.php')) ?>" class="quote-actions">
                                 <?=csrfField()?>
                                 <input type="hidden" name="quotation_id" value="<?=e($quotation['quotation_id'])?>" />
-                                <button class="btn btn-sm btn-primary" name="action" value="accept">Accept</button>
+                                <button class="btn btn-sm btn-primary">Accept</button>
                                 <div class="counter-line">
                                     <input
                                         class="form-control form-control-sm"
@@ -133,19 +84,19 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                                         name="counter_price"
                                         value="<?=e($quotation['proposed_price'])?>"
                                     />
-                                    <button class="btn btn-sm btn-outline-primary" name="action" value="counter">
+                                    <button class="btn btn-sm btn-outline-primary" formaction="<?= e(url('Abir/supplier/actions/counter-quotation.php')) ?>">
                                         Counter
                                     </button>
                                 </div>
-                                <button class="btn btn-sm btn-outline-danger" name="action" value="reject">
+                                <button class="btn btn-sm btn-outline-danger" formaction="<?= e(url('Abir/supplier/actions/reject-quotation.php')) ?>">
                                     Reject
                                 </button>
                             </form>
                             <?php elseif ($quotation['status'] === 'Countered'):?>
-                            <form method="post">
+                            <form method="post" action="<?= e(url('Abir/supplier/actions/reject-quotation.php')) ?>">
                                 <?=csrfField()?>
                                 <input type="hidden" name="quotation_id" value="<?=e($quotation['quotation_id'])?>" />
-                                <button class="btn btn-sm btn-outline-danger" name="action" value="reject">
+                                <button class="btn btn-sm btn-outline-danger">
                                     Withdraw
                                 </button>
                             </form>

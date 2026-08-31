@@ -3,132 +3,6 @@ require __DIR__ . '/../../Mixed/includes/bootstrap.php';
 requireRole('supplier');
 $pdo = db();
 $supplierId = (int) currentUser()['user_id'];
-$errors = [];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifyCsrf();
-    $action = input('action');
-    $batchId = filter_input(INPUT_POST, 'batch_id', FILTER_VALIDATE_INT) ?: null;
-
-    if ($action === 'archive' && $batchId) {
-        $pdo->beginTransaction();
-        try {
-            $statement = $pdo->prepare('SELECT batch_id FROM textile_batch WHERE batch_id = ? AND supplier_id = ? FOR UPDATE');
-            $statement->execute([$batchId, $supplierId]);
-            if (!$statement->fetchColumn()) {
-                throw new RuntimeException('Batch not found.');
-            }
-            $pdo->prepare("UPDATE textile_batch SET status = 'Inactive' WHERE batch_id = ?")->execute([$batchId]);
-            $pdo->prepare("UPDATE listing SET status = 'Inactive' WHERE batch_id = ? AND status = 'Active'")->execute([$batchId]);
-            $pdo->commit();
-            setFlash('success', 'Batch and its active listings were archived.');
-        } catch (Throwable $exception) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            setFlash('danger', $exception->getMessage());
-        }
-        redirect('Farid/supplier/batches.php');
-    }
-
-    $values = [
-        'material_type' => input('material_type'), 'composition' => input('composition'),
-        'color' => input('color'), 'gsm' => input('gsm'), 'condition' => input('condition'),
-        'total_quantity' => input('total_quantity'), 'average_cost' => input('average_cost'),
-        'storage_location' => input('storage_location'), 'entry_date' => input('entry_date'),
-        'unit_of_measure' => input('unit_of_measure'), 'status' => input('status'),
-    ];
-    foreach (['material_type', 'composition', 'color', 'storage_location', 'unit_of_measure'] as $field) {
-        if ($values[$field] === '') {
-            $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
-        }
-    }
-    if (!is_numeric($values['gsm']) || (float) $values['gsm'] <= 0) {
-        $errors[] = 'GSM must be greater than zero.';
-    }
-    if (!is_numeric($values['total_quantity']) || (float) $values['total_quantity'] <= 0) {
-        $errors[] = 'Total quantity must be greater than zero.';
-    }
-    if (!is_numeric($values['average_cost']) || (float) $values['average_cost'] < 0) {
-        $errors[] = 'Average cost cannot be negative.';
-    }
-    if (!in_array($values['condition'], ['New', 'Surplus', 'Dead Stock', 'Recycled'], true)) {
-        $errors[] = 'Select a valid condition.';
-    }
-    if (!in_array($values['status'], ['Active', 'Inactive'], true)) {
-        $errors[] = 'Select a valid status.';
-    }
-    if (!validDate($values['entry_date'])) {
-        $errors[] = 'Enter a valid entry date.';
-    }
-
-    if (!$errors) {
-        $pdo->beginTransaction();
-        try {
-            if ($batchId) {
-                $statement = $pdo->prepare('SELECT * FROM textile_batch WHERE batch_id = ? AND supplier_id = ? FOR UPDATE');
-                $statement->execute([$batchId, $supplierId]);
-                $old = $statement->fetch();
-                if (!$old) {
-                    throw new RuntimeException('Batch not found.');
-                }
-                $used = (float) $old['total_quantity'] - (float) $old['available_quantity'];
-                $newTotal = (float) $values['total_quantity'];
-                if ($newTotal < $used) {
-                    throw new RuntimeException("Total quantity cannot be below {$used}; that amount is already reserved.");
-                }
-                $newAvailable = $newTotal - $used;
-                $allocatedStatement = $pdo->prepare("SELECT COALESCE(SUM(listed_quantity),0) FROM listing WHERE batch_id=? AND status='Active'");
-                $allocatedStatement->execute([$batchId]);
-                $allocated = (float) $allocatedStatement->fetchColumn();
-                if ($newAvailable < $allocated) {
-                    throw new RuntimeException("Available quantity cannot be below {$allocated}; that amount is allocated to active listings.");
-                }
-                $delta = $newTotal - (float) $old['total_quantity'];
-                $pdo->prepare(
-                    'UPDATE textile_batch SET material_type=?, composition=?, color=?, gsm=?, `condition`=?, total_quantity=?,
-                     available_quantity=?, average_cost=?, storage_location=?, entry_date=?, unit_of_measure=?, status=?
-                     WHERE batch_id=?'
-                )->execute([
-                    $values['material_type'], $values['composition'], $values['color'], $values['gsm'], $values['condition'],
-                    $newTotal, $newAvailable, $values['average_cost'], $values['storage_location'], $values['entry_date'],
-                    $values['unit_of_measure'], $values['status'], $batchId,
-                ]);
-                if (abs($delta) > 0.0001) {
-                    $type = $delta > 0 ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
-                    $pdo->prepare('INSERT INTO stock_transaction (batch_id, quantity, transaction_type, remarks) VALUES (?, ?, ?, ?)')
-                        ->execute([$batchId, abs($delta), $type, 'Batch total adjusted by supplier']);
-                }
-                if ($values['status'] === 'Inactive') {
-                    $pdo->prepare("UPDATE listing SET status='Inactive' WHERE batch_id=? AND status='Active'")->execute([$batchId]);
-                }
-                setFlash('success', 'Batch updated successfully.');
-            } else {
-                $pdo->prepare(
-                    'INSERT INTO textile_batch (supplier_id,material_type,composition,color,gsm,`condition`,total_quantity,
-                     available_quantity,average_cost,storage_location,entry_date,unit_of_measure,status)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
-                )->execute([
-                    $supplierId, $values['material_type'], $values['composition'], $values['color'], $values['gsm'],
-                    $values['condition'], $values['total_quantity'], $values['total_quantity'], $values['average_cost'],
-                    $values['storage_location'], $values['entry_date'], $values['unit_of_measure'], $values['status'],
-                ]);
-                $batchId = (int) $pdo->lastInsertId();
-                $pdo->prepare("INSERT INTO stock_transaction (batch_id, quantity, transaction_type, remarks) VALUES (?, ?, 'STOCK_ADDED', 'Opening quantity')")
-                    ->execute([$batchId, $values['total_quantity']]);
-                setFlash('success', 'Textile batch created successfully.');
-            }
-            $pdo->commit();
-            redirect('Farid/supplier/batches.php');
-        } catch (Throwable $exception) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            $errors[] = $exception->getMessage();
-        }
-    }
-}
-
 $edit = null;
 if (isset($_GET['edit'])) {
     $statement = $pdo->prepare('SELECT * FROM textile_batch WHERE batch_id = ? AND supplier_id = ?');
@@ -156,6 +30,12 @@ $form = $edit ?: [
     'unit_of_measure' => 'kg',
     'status' => 'Active',
 ];
+$submittedValues = $_SESSION['batch_values'] ?? null;
+unset($_SESSION['batch_values']);
+
+if (is_array($submittedValues)) {
+    $form = array_merge($form, $submittedValues);
+}
 $pageTitle = 'Textile batches';
 require __DIR__ . '/../../Mixed/includes/header.php';
 ?>
@@ -168,20 +48,10 @@ require __DIR__ . '/../../Mixed/includes/header.php';
         </div>
         <a class="btn btn-outline-primary" href="<?=e(url('Farid/supplier/listings.php'))?>">Manage listings</a>
     </div>
-    <?php if ($errors):?>
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            <?php foreach ($errors as $error):?>
-            <li><?=e($error)?></li>
-            <?php endforeach;?>
-        </ul>
-    </div>
-    <?php endif;?>
     <section class="panel">
         <h2 class="h4"><?=$edit ? 'Edit batch #' . e($edit['batch_id']) : 'Add a textile batch'?></h2>
-        <form method="post">
+        <form method="post" action="<?= e(url('Farid/supplier/actions/save-batch.php')) ?>">
             <?=csrfField()?>
-            <input type="hidden" name="action" value="save" />
             <input type="hidden" name="batch_id" value="<?=e($form['batch_id'])?>" />
             <div class="form-grid">
                 <div>
@@ -315,9 +185,8 @@ require __DIR__ . '/../../Mixed/includes/header.php';
                             <div class="action-row">
                                 <a class="btn btn-sm btn-outline-primary" href="?edit=<?=e($batch['batch_id'])?>">Edit</a>
                                 <?php if ($batch['status'] === 'Active'):?>
-                                <form method="post" onsubmit="return confirm('Archive this batch and its listings?');">
+                                <form method="post" action="<?= e(url('Farid/supplier/actions/archive-batch.php')) ?>" onsubmit="return confirm('Archive this batch and its listings?');">
                                     <?=csrfField()?>
-                                    <input type="hidden" name="action" value="archive" />
                                     <input type="hidden" name="batch_id" value="<?=e($batch['batch_id'])?>" />
                                     <button class="btn btn-sm btn-outline-danger">Archive</button>
                                 </form>
