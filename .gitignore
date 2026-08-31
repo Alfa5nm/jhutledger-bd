@@ -13,7 +13,3 @@ vendor/
 .vscode/
 .DS_Store
 Thumbs.db
-
-# Local development instructions and unrelated reference diagrams
-AGENTS.md
-Campus_Club_Event_Hub*.svg
