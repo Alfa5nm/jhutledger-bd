@@ -1,4 +1,4 @@
-# JhutLedger BD — Faculty Milestone
+# JhutLedger BD
 
 A database-driven university project built with PHP 8.2, MariaDB/MySQL, PDO, HTML/CSS, and Bootstrap. It implements the complete 13-table schema, authentication and role authorization, supplier inventory and listing management, buyer marketplace search, B2B quotations, B2C orders, fulfilment, simulated payments, transactional cancellation, stock-ledger tracing, order timelines, printable invoices, sales reporting, admin exception monitoring, profile editing, and database health checks.
 
@@ -79,17 +79,8 @@ D:\Softwares\XAMPP\php\php.exe Mixed\tests\readability_check.php
 D:\Softwares\XAMPP\php\php.exe Mixed\tests\request_flow_check.php
 ```
 
-See [Mixed/docs/VIVA_CHECKLIST.md](Mixed/docs/VIVA_CHECKLIST.md) for the recommended faculty demonstration.
 See [Mixed/docs/REQUEST_FLOW_GUIDE.md](Mixed/docs/REQUEST_FLOW_GUIDE.md) for the beginner-readable path from each form
 to its POST action, service function, prepared query type, and redirect.
-
-Before the four-feature demonstration, prepare non-destructive reusable records with:
-
-```powershell
-D:\Softwares\XAMPP\php\php.exe Mixed\scripts\prepare_faculty_demo.php
-```
-
-The command reuses suitable Confirmed orders when available; otherwise it creates quotation-backed demo orders for completion/payment and cancellation without deleting existing data.
 
 ## Marketplace workflow
 

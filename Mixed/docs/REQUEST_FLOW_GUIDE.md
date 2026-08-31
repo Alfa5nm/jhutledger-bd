@@ -39,7 +39,7 @@ and returns a result. The action then redirects the browser to a display page.
 Every action endpoint is POST-only. A direct GET returns HTTP 405. Missing CSRF tokens, invalid roles, and unrelated
 records are rejected before a database change is allowed.
 
-## Viva examples in plain language
+## Worked examples in plain language
 
 ### Login
 

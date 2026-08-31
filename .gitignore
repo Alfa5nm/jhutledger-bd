@@ -14,7 +14,6 @@ vendor/
 .DS_Store
 Thumbs.db
 
-# Local Codex/Wigolo instructions and unrelated reference diagrams
+# Local development instructions and unrelated reference diagrams
 AGENTS.md
 Campus_Club_Event_Hub*.svg
-

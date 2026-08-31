@@ -84,7 +84,7 @@ require __DIR__ . '/../Mixed/includes/header.php';
                 <?php endforeach; ?>
             </select>
             <p class="form-note">
-                This faculty demonstration records a simulated payment; no real money is transferred.
+                This is a simulated payment record; no real money is transferred.
             </p>
             <button class="btn btn-primary w-100" type="submit"><?= $order['payment_status'] === 'Failed' ? 'Resubmit payment' : 'Submit payment' ?></button>
         </form>
